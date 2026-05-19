@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Filament\Resources\Employees\Schemas;
+
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Schema;
+
+class EmployeeForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Select::make('user_id')
+                    ->relationship('user', 'name')
+                    ->required()
+                    ->searchable()
+                    ->preload(),
+                TextInput::make('employee_number')
+                    ->required()
+                    ->maxLength(50)
+                    ->unique(ignoreRecord: true),
+                Select::make('department_id')
+                    ->relationship('department', 'name')
+                    ->required()
+                    ->searchable()
+                    ->preload(),
+                TextInput::make('position')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('initials')
+                    ->required()
+                    ->maxLength(10),
+                TextInput::make('phone')
+                    ->maxLength(50)
+                    ->tel(),
+            ]);
+    }
+}
