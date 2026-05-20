@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
 use Filament\Actions\DeleteAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 class EditBooking extends EditRecord
@@ -15,5 +16,18 @@ class EditBooking extends EditRecord
         return [
             DeleteAction::make(),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+    protected function getUpdatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('Booking updated')
+            ->body('The booking has been updated successfully.');
     }
 }

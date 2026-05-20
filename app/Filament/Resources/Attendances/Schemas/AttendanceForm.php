@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Attendances\Schemas;
 
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class AttendanceForm
@@ -10,7 +11,10 @@ class AttendanceForm
     {
         return $schema
             ->components([
-                //
+                Section::make('Attendance')
+                    ->schema([
+                        //
+                    ]),
             ]);
     }
 }
