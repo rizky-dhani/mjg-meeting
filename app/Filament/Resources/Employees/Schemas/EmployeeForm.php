@@ -38,11 +38,6 @@ class EmployeeForm
                         TextInput::make('initials')
                             ->required()
                             ->maxLength(10),
-                    ]),
-                Section::make('Contact')
-                    ->collapsible()
-                    ->collapsed()
-                    ->schema([
                         TextInput::make('phone')
                             ->maxLength(50)
                             ->tel(),
