@@ -71,7 +71,7 @@ tests/
 **Files modified:**
 - `composer.json` (via `composer require`)
 
-- [ ] **Step 1: Install spatie/laravel-permissions**
+- [x] **Step 1: Install spatie/laravel-permissions**
 
 Run:
 ```bash
@@ -80,7 +80,7 @@ composer require spatie/laravel-permissions
 
 Expected output: Package installed successfully.
 
-- [ ] **Step 2: Install milon/barcode**
+- [x] **Step 2: Install milon/barcode**
 
 Run:
 ```bash
@@ -89,7 +89,7 @@ composer require milon/barcode
 
 Expected output: Package installed successfully.
 
-- [ ] **Step 3: Publish and migrate spatie config/migration**
+- [x] **Step 3: Publish and migrate spatie config/migration**
 
 ```bash
 php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
@@ -98,7 +98,7 @@ php artisan migrate
 
 Expected output: Configuration published, `permissions` table and `model_has_roles`/`model_has_permissions`/`role_has_permissions` tables created.
 
-- [ ] **Step 4: Verify packages are installed**
+- [x] **Step 4: Verify packages are installed**
 
 Run:
 ```bash
@@ -117,7 +117,7 @@ Expected output: Both packages show in composer show output.
 - `database/migrations/xxxx_create_departments_table.php`
 - `database/migrations/xxxx_create_rooms_table.php`
 
-- [ ] **Step 1: Create locations migration**
+- [x] **Step 1: Create locations migration**
 
 Run:
 ```bash
@@ -152,7 +152,7 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 2: Create departments migration**
+- [x] **Step 2: Create departments migration**
 
 Run:
 ```bash
@@ -187,7 +187,7 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 3: Create rooms migration**
+- [x] **Step 3: Create rooms migration**
 
 Run:
 ```bash
@@ -223,7 +223,7 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 4: Run migrations**
+- [x] **Step 4: Run migrations**
 
 ```bash
 php artisan migrate
@@ -240,7 +240,7 @@ Expected output: Tables `locations`, `departments`, `rooms` created successfully
 - `database/migrations/xxxx_create_bookings_table.php`
 - `database/migrations/xxxx_create_attendance_table.php`
 
-- [ ] **Step 1: Create employees migration**
+- [x] **Step 1: Create employees migration**
 
 Run:
 ```bash
@@ -278,7 +278,7 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 2: Create bookings migration**
+- [x] **Step 2: Create bookings migration**
 
 Run:
 ```bash
@@ -321,7 +321,7 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 3: Add spatie permission columns, create attendance migration**
+- [x] **Step 3: Add spatie permission columns, create attendance migration**
 
 Run:
 ```bash
@@ -358,7 +358,7 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 4: Run migrations**
+- [x] **Step 4: Run migrations**
 
 ```bash
 php artisan migrate
@@ -381,7 +381,7 @@ Expected output: All 6 new tables created successfully.
 **Files modified:**
 - `app/Models/User.php`
 
-- [ ] **Step 1: Create Location model**
+- [x] **Step 1: Create Location model**
 
 ```bash
 php artisan make:model Location
@@ -416,7 +416,7 @@ class Location extends Model
 }
 ```
 
-- [ ] **Step 2: Create Department model**
+- [x] **Step 2: Create Department model**
 
 ```bash
 php artisan make:model Department
@@ -451,7 +451,7 @@ class Department extends Model
 }
 ```
 
-- [ ] **Step 3: Create Room model**
+- [x] **Step 3: Create Room model**
 
 ```bash
 php artisan make:model Room
@@ -493,7 +493,7 @@ class Room extends Model
 }
 ```
 
-- [ ] **Step 4: Create Employee model**
+- [x] **Step 4: Create Employee model**
 
 ```bash
 php artisan make:model Employee
@@ -536,7 +536,7 @@ class Employee extends Model
 }
 ```
 
-- [ ] **Step 5: Create Booking model**
+- [x] **Step 5: Create Booking model**
 
 ```bash
 php artisan make:model Booking
@@ -648,7 +648,7 @@ class Booking extends Model
 }
 ```
 
-- [ ] **Step 6: Create Attendance model**
+- [x] **Step 6: Create Attendance model**
 
 Run:
 ```bash
@@ -696,7 +696,7 @@ class Attendance extends Model
 }
 ```
 
-- [ ] **Step 7: Update User model with relationships**
+- [x] **Step 7: Update User model with relationships**
 
 Edit `app/Models/User.php` — add `HasRoles` trait, add `employee`, `bookings`, and `attendance` relationships:
 
@@ -747,7 +747,7 @@ class User extends Authenticatable
 }
 ```
 
-- [ ] **Step 8: Quick validation — list models**
+- [x] **Step 8: Quick validation — list models**
 
 ```bash
 ls app/Models/
@@ -766,7 +766,7 @@ Expected output: All 7 model files present (Attendance, Booking, Department, Emp
 - `database/seeders/DatabaseSeeder.php`
 - `app/Providers/AppServiceProvider.php`
 
-- [ ] **Step 1: Create RoleSeeder**
+- [x] **Step 1: Create RoleSeeder**
 
 Create `database/seeders/RoleSeeder.php`:
 
@@ -804,7 +804,7 @@ class RoleSeeder extends Seeder
 }
 ```
 
-- [ ] **Step 2: Update DatabaseSeeder**
+- [x] **Step 2: Update DatabaseSeeder**
 
 Edit `database/seeders/DatabaseSeeder.php`:
 
@@ -826,7 +826,7 @@ class DatabaseSeeder extends Seeder
 }
 ```
 
-- [ ] **Step 3: Add Gate::before in AppServiceProvider**
+- [x] **Step 3: Add Gate::before in AppServiceProvider**
 
 Edit `app/Providers/AppServiceProvider.php`:
 
@@ -856,7 +856,7 @@ class AppServiceProvider extends ServiceProvider
 }
 ```
 
-- [ ] **Step 4: Run the seeder**
+- [x] **Step 4: Run the seeder**
 
 ```bash
 php artisan db:seed
@@ -864,7 +864,7 @@ php artisan db:seed
 
 Expected output: Database seeded with roles and admin user.
 
-- [ ] **Step 5: Seed your existing user with Super Admin role**
+- [x] **Step 5: Seed your existing user with Super Admin role**
 
 Run:
 ```bash
@@ -883,7 +883,7 @@ Expected output: Collection with "Super Admin", "Admin", "User".
 - `app/Filament/Resources/EmployeeResource.php`
 - `app/Filament/Resources/RoomResource.php`
 
-- [ ] **Step 1: Create LocationResource**
+- [x] **Step 1: Create LocationResource**
 
 ```bash
 php artisan make:filament-resource Location
@@ -973,7 +973,7 @@ class LocationResource extends Resource
 }
 ```
 
-- [ ] **Step 2: Create DepartmentResource**
+- [x] **Step 2: Create DepartmentResource**
 
 ```bash
 php artisan make:filament-resource Department
@@ -1064,7 +1064,7 @@ class DepartmentResource extends Resource
 }
 ```
 
-- [ ] **Step 3: Create EmployeeResource**
+- [x] **Step 3: Create EmployeeResource**
 
 ```bash
 php artisan make:filament-resource Employee
@@ -1174,7 +1174,7 @@ class EmployeeResource extends Resource
 }
 ```
 
-- [ ] **Step 4: Create RoomResource**
+- [x] **Step 4: Create RoomResource**
 
 ```bash
 php artisan make:filament-resource Room
@@ -1274,7 +1274,7 @@ class RoomResource extends Resource
 }
 ```
 
-- [ ] **Step 5: Verify resources appear in Filament**
+- [x] **Step 5: Verify resources appear in Filament**
 
 ```bash
 php artisan route:list --path=dashboard
@@ -1289,7 +1289,7 @@ Expected output: Filament routes visible.
 **Files created:**
 - `app/Filament/Resources/BookingResource.php` (and its page classes)
 
-- [ ] **Step 1: Create BookingResource with pages**
+- [x] **Step 1: Create BookingResource with pages**
 
 ```bash
 php artisan make:filament-resource Booking --simple
@@ -1508,7 +1508,7 @@ class BookingResource extends Resource
 }
 ```
 
-- [ ] **Step 2: Add ViewBooking page**
+- [x] **Step 2: Add ViewBooking page**
 
 Run:
 ```bash
@@ -1591,7 +1591,7 @@ class ViewBooking extends ViewRecord
 }
 ```
 
-- [ ] **Step 3: Validate resource registration**
+- [x] **Step 3: Validate resource registration**
 
 ```bash
 php artisan route:list --path=dashboard | grep booking
@@ -1606,7 +1606,7 @@ Expected output: Booking resource routes visible.
 **Files created:**
 - `app/Filament/Resources/AttendanceResource.php`
 
-- [ ] **Step 1: Create AttendanceResource**
+- [x] **Step 1: Create AttendanceResource**
 
 ```bash
 php artisan make:filament-resource Attendance --simple
@@ -1670,7 +1670,7 @@ class AttendanceResource extends Resource
 }
 ```
 
-- [ ] **Step 2: Create the ListAttendances page**
+- [x] **Step 2: Create the ListAttendances page**
 
 The `--simple` flag should have auto-created the page. Verify it exists:
 
@@ -1688,7 +1688,7 @@ Expected output: `ListAttendances.php` exists.
 - `app/Livewire/AttendanceCheckin.php`
 - `resources/views/livewire/attendance-checkin.blade.php`
 
-- [ ] **Step 1: Create Livewire component**
+- [x] **Step 1: Create Livewire component**
 
 ```bash
 php artisan make:livewire AttendanceCheckin
@@ -1782,7 +1782,7 @@ class AttendanceCheckin extends Component
 }
 ```
 
-- [ ] **Step 2: Create the Blade view**
+- [x] **Step 2: Create the Blade view**
 
 Replace `resources/views/livewire/attendance-checkin.blade.php`:
 
@@ -1885,7 +1885,7 @@ Replace `resources/views/livewire/attendance-checkin.blade.php`:
 </div>
 ```
 
-- [ ] **Step 3: Create a layout for the attendance page**
+- [x] **Step 3: Create a layout for the attendance page**
 
 Create `resources/views/layouts/app.blade.php` if it doesn't exist. Add a minimal layout:
 
@@ -1906,7 +1906,7 @@ Create `resources/views/layouts/app.blade.php` if it doesn't exist. Add a minima
 </html>
 ```
 
-- [ ] **Step 4: Add the attendance route**
+- [x] **Step 4: Add the attendance route**
 
 Edit `routes/web.php`:
 
@@ -1925,7 +1925,7 @@ Route::get('/attendance/{qrToken}', AttendanceCheckin::class)
     ->name('attendance.checkin');
 ```
 
-- [ ] **Step 5: Verify route works**
+- [x] **Step 5: Verify route works**
 
 ```bash
 php artisan route:list --path=attendance
