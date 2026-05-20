@@ -1,0 +1,90 @@
+<?php
+
+use App\Livewire\AttendanceCheckin;
+use App\Models\Attendance;
+use App\Models\Booking;
+use App\Models\Room;
+use App\Models\User;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
+
+use function Pest\Laravel\actingAs;
+
+beforeEach(function () {
+    Role::create(['name' => 'User']);
+    Role::create(['name' => 'Admin']);
+
+    $this->room = Room::factory()->create();
+    $this->user = User::factory()->create()->assignRole('User');
+
+    $this->booking = Booking::factory()->approved()->create([
+        'room_id' => $this->room->id,
+        'user_id' => $this->user->id,
+        'starts_at' => now()->subHour(),
+        'ends_at' => now()->addHour(),
+    ]);
+});
+
+it('shows meeting details for a valid QR token', function () {
+    actingAs($this->user);
+
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSet('booking.id', $this->booking->id)
+        ->assertSee($this->booking->title)
+        ->assertSee($this->booking->room->name);
+});
+
+it('allows user to check in', function () {
+    actingAs($this->user);
+
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->call('checkIn')
+        ->assertSet('checkedIn', true);
+
+    expect(Attendance::where('booking_id', $this->booking->id)
+        ->where('user_id', $this->user->id)
+        ->exists()
+    )->toBeTrue();
+});
+
+it('prevents duplicate check-in', function () {
+    actingAs($this->user);
+
+    Attendance::create([
+        'booking_id' => $this->booking->id,
+        'user_id' => $this->user->id,
+        'checked_in_at' => now(),
+    ]);
+
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSet('alreadyCheckedIn', true)
+        ->assertSee('Already Checked In');
+});
+
+it('shows expired for past meeting', function () {
+    $pastBooking = Booking::factory()->approved()->create([
+        'room_id' => $this->room->id,
+        'user_id' => $this->user->id,
+        'starts_at' => now()->subDays(2),
+        'ends_at' => now()->subDays(2)->addHour(),
+    ]);
+
+    actingAs($this->user);
+
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $pastBooking->qr_token])
+        ->assertSet('isExpired', true)
+        ->assertSee('QR Code Expired');
+});
+
+it('shows invalid for non-existent token', function () {
+    actingAs($this->user);
+
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => 'non-existent-token'])
+        ->assertSet('booking', null)
+        ->assertSee('Invalid QR Code');
+});
+
+it('requires authentication', function () {
+    $this->get(route('attendance.checkin', ['qrToken' => $this->booking->qr_token]))
+        ->assertRedirect();
+});
