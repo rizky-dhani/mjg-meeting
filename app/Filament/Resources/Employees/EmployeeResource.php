@@ -8,6 +8,7 @@ use App\Filament\Resources\Employees\Pages\ListEmployees;
 use App\Filament\Resources\Employees\Schemas\EmployeeForm;
 use App\Filament\Resources\Employees\Tables\EmployeesTable;
 use App\Models\Employee;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -19,7 +20,7 @@ class EmployeeResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'System Management';
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $recordTitleAttribute = 'employee_number';
 
