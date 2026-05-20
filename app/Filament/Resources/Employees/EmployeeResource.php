@@ -18,6 +18,8 @@ class EmployeeResource extends Resource
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
 
+    protected static string | UnitEnum | null $navigationGroup = 'System Management';
+
     protected static ?string $recordTitleAttribute = 'employee_number';
 
     public static function form(Schema $schema): Schema
