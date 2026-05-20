@@ -11,6 +11,8 @@ class Attendance extends Model
     /** @use HasFactory<\Database\Factories\AttendanceFactory> */
     use HasFactory;
 
+    protected $table = 'attendance';
+
     protected $fillable = [
         'booking_id',
         'user_id',

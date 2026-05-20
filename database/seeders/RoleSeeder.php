@@ -27,5 +27,15 @@ class RoleSeeder extends Seeder
             ]
         );
         $admin->assignRole('Super Admin');
+
+        // Create demo user with User role
+        $demoUser = User::firstOrCreate(
+            ['email' => 'user@meeting.test'],
+            [
+                'name' => 'Demo User',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $demoUser->assignRole('User');
     }
 }
