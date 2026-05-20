@@ -20,6 +20,8 @@ class LocationResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'System Management';
 
+    protected static ?string $navigationParentItem = 'Employees';
+
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-office';
 
     protected static ?string $recordTitleAttribute = 'name';

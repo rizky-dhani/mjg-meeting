@@ -8,15 +8,21 @@ use App\Filament\Resources\Departments\Pages\ListDepartments;
 use App\Filament\Resources\Departments\Schemas\DepartmentForm;
 use App\Filament\Resources\Departments\Tables\DepartmentsTable;
 use App\Models\Department;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-library';
+    protected static string | UnitEnum | null $navigationGroup = 'System Management';
+
+    protected static ?string $navigationParentItem = 'Employees';
+
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-library';
 
     protected static ?string $recordTitleAttribute = 'name';
 
