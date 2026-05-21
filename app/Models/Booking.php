@@ -24,6 +24,8 @@ class Booking extends Model implements Approvable
         'description',
         'starts_at',
         'ends_at',
+        'qr_token',
+        'qr_code',
     ];
 
     protected function casts(): array

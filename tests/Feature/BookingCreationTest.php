@@ -25,15 +25,12 @@ it('a user can create a booking via the model', function () {
         'description' => 'Daily team sync',
         'starts_at' => now()->addDay(),
         'ends_at' => now()->addDay()->addHour(),
-        'status' => 'pending',
     ]);
 
     expect($booking->title)->toBe('Team Standup');
-    expect($booking->status)->toBe('pending');
     assertDatabaseHas('bookings', [
         'title' => 'Team Standup',
         'user_id' => $this->user->id,
-        'status' => 'pending',
     ]);
 });
 

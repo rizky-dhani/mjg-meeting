@@ -32,7 +32,10 @@ class AttendanceCheckin extends Component
     {
         $this->booking = Booking::query()
             ->where('qr_token', $this->qrToken)
-            ->where('status', 'approved')
+            ->whereHas('approvals', function ($q) {
+                $q->where('key', 'booking_approval')
+                  ->where('status', \App\Support\Approvals\ApprovalStatus\BookingApprovalStatus::Approved->value);
+            })
             ->with(['room.location', 'attendance'])
             ->first();
 
@@ -43,7 +46,7 @@ class AttendanceCheckin extends Component
             return;
         }
 
-        if ($this->booking->isQrExpired()) {
+        if ($this->booking->isExpired()) {
             $this->isExpired = true;
             $this->loading = false;
 

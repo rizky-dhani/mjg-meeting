@@ -25,12 +25,13 @@ enum BookingApprovalStatus: string implements HasApprovalStatuses
         return [self::Pending];
     }
 
-    public static function getCaseLabel(self $case): string
+    public static function getCaseLabel(HasApprovalStatuses $case): string
     {
-        return match ($case) {
-            self::Approved => 'Approved',
-            self::Pending => 'Pending',
-            self::Rejected => 'Rejected',
+        return match (true) {
+            $case instanceof self && $case === self::Approved => 'Approved',
+            $case instanceof self && $case === self::Pending => 'Pending',
+            $case instanceof self && $case === self::Rejected => 'Rejected',
+            default => $case->value,
         };
     }
 }

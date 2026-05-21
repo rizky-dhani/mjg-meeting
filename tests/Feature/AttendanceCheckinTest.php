@@ -5,6 +5,9 @@ use App\Models\Attendance;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
+use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
+use App\Support\Approvals\Models\Approval;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
@@ -16,13 +19,41 @@ beforeEach(function () {
 
     $this->room = Room::factory()->create();
     $this->user = User::factory()->create()->assignRole('User');
+    $this->admin = User::factory()->create()->assignRole('Admin');
 
-    $this->booking = Booking::factory()->approved()->create([
+    $qrToken = (string) Str::uuid();
+    $this->booking = Booking::factory()->create([
         'room_id' => $this->room->id,
         'user_id' => $this->user->id,
         'starts_at' => now()->subHour(),
         'ends_at' => now()->addHour(),
+        'qr_token' => $qrToken,
+        'qr_code' => url('/attendance/' . $qrToken),
     ]);
+
+    // Create requester approval
+    Approval::create([
+        'approver_id' => $this->user->id,
+        'approver_type' => User::class,
+        'approvable_id' => $this->booking->id,
+        'approvable_type' => Booking::class,
+        'status' => BookingApprovalStatus::Pending->value,
+        'key' => 'booking_approval',
+        'approval_by' => 'requester',
+    ]);
+
+    // Admin fully approves
+    Approval::create([
+        'approver_id' => $this->admin->id,
+        'approver_type' => User::class,
+        'approvable_id' => $this->booking->id,
+        'approvable_type' => Booking::class,
+        'status' => BookingApprovalStatus::Approved->value,
+        'key' => 'booking_approval',
+        'approval_by' => 'management',
+    ]);
+
+    $this->booking->refresh();
 });
 
 it('shows meeting details for a valid QR token', function () {
@@ -62,11 +93,34 @@ it('prevents duplicate check-in', function () {
 });
 
 it('shows expired for past meeting', function () {
-    $pastBooking = Booking::factory()->approved()->create([
+    $pastQrToken = (string) Str::uuid();
+    $pastBooking = Booking::factory()->create([
         'room_id' => $this->room->id,
         'user_id' => $this->user->id,
         'starts_at' => now()->subDays(2),
         'ends_at' => now()->subDays(2)->addHour(),
+        'qr_token' => $pastQrToken,
+        'qr_code' => url('/attendance/' . $pastQrToken),
+    ]);
+
+    Approval::create([
+        'approver_id' => $this->user->id,
+        'approver_type' => User::class,
+        'approvable_id' => $pastBooking->id,
+        'approvable_type' => Booking::class,
+        'status' => BookingApprovalStatus::Pending->value,
+        'key' => 'booking_approval',
+        'approval_by' => 'requester',
+    ]);
+
+    Approval::create([
+        'approver_id' => $this->admin->id,
+        'approver_type' => User::class,
+        'approvable_id' => $pastBooking->id,
+        'approvable_type' => Booking::class,
+        'status' => BookingApprovalStatus::Approved->value,
+        'key' => 'booking_approval',
+        'approval_by' => 'management',
     ]);
 
     actingAs($this->user);
