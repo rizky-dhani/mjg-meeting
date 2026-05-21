@@ -69,7 +69,36 @@ class BookingsTable
                         'pending' => 'Pending',
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
-                    ]),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (! $data['value']) {
+                            return;
+                        }
+
+                        match ($data['value']) {
+                            'approved' => $query->whereHas('approvals', function ($q) {
+                                $q->where('key', 'booking_approval')
+                                  ->where('status', BookingApprovalStatus::Approved->value);
+                            }),
+                            'pending' => $query->whereHas('approvals', function ($q) {
+                                $q->where('key', 'booking_approval')
+                                  ->where('status', BookingApprovalStatus::Pending->value);
+                            })->whereDoesntHave('approvals', function ($q) {
+                                $q->where('key', 'booking_approval')
+                                  ->where('approval_by', 'management')
+                                  ->where('status', BookingApprovalStatus::Approved->value);
+                            }),
+                            'rejected' => $query->whereHas('approvals', function ($q) {
+                                $q->where('key', 'booking_approval')
+                                  ->where('approval_by', 'management')
+                                  ->where('status', BookingApprovalStatus::Rejected->value);
+                            }),
+                            'open' => $query->whereDoesntHave('approvals', function ($q) {
+                                $q->where('key', 'booking_approval');
+                            }),
+                            default => null,
+                        };
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -188,6 +217,8 @@ class BookingsTable
     public static function scopeQuery(Builder $query): Builder
     {
         $user = auth()->user();
+
+        $query->with('approvals');
 
         if ($user->hasRole('Admin') || $user->hasRole('Super Admin')) {
             return $query;

@@ -172,6 +172,12 @@ class ApprovalActions extends Component
 
     protected function changeApproval(HasApprovalStatuses $status, ApprovalBy $approvalBy): void
     {
+        $record = $this->getRecord();
+
+        if (! $approvalBy->canApprove(Auth::user(), $record)) {
+            abort(403);
+        }
+
         $this->createApproval($status, $approvalBy, $this->approvalKey);
         $this->getRecord()?->refresh();
 

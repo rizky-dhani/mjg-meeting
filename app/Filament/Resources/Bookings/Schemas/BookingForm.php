@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Bookings\Schemas;
 
 use App\Models\Booking;
+use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -38,7 +39,13 @@ class BookingForm
                                     }
 
                                     $overlap = Booking::where('room_id', $value)
-                                        ->where('status', 'approved')
+                                        ->where(function ($q) {
+                                            $q->whereDoesntHave('approvals', function ($q2) {
+                                                $q2->where('key', 'booking_approval')
+                                                   ->where('approval_by', 'management')
+                                                   ->where('status', BookingApprovalStatus::Rejected->value);
+                                            });
+                                        })
                                         ->where(function ($query) use ($startsAt, $endsAt) {
                                             $query->whereBetween('starts_at', [$startsAt, $endsAt])
                                                 ->orWhereBetween('ends_at', [$startsAt, $endsAt])

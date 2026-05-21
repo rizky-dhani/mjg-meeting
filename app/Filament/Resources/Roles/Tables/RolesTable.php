@@ -18,9 +18,9 @@ class RolesTable
                     ->searchable(),
                 TextColumn::make('guard_name')
                     ->searchable(),
-                TextColumn::make('permissions.count')
+                TextColumn::make('permissions_count')
                     ->label(__('Permissions'))
-                    ->counts()
+                    ->counts('permissions')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()

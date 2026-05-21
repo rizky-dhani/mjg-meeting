@@ -73,13 +73,6 @@ class Booking extends Model implements Approvable
         return $this->ends_at->endOfDay()->isPast();
     }
 
-    public function scopePending($query)
-    {
-        return $query->whereHas('approvals', function ($q) {
-            $q->where('key', 'booking_approval');
-        });
-    }
-
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);

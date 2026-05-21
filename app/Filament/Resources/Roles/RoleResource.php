@@ -20,7 +20,7 @@ class RoleResource extends Resource
     protected static ?string $model = Role::class;
 
     protected static string | UnitEnum | null $navigationGroup = 'System Management';
-    protected static ?string $navigationParentItem = UserResource::class;
+    protected static ?string $navigationParentItem = 'Users';
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedShieldCheck;
 
