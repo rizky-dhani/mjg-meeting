@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
 use App\Models\Booking;
+use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
+use App\Support\Approvals\Filament\Components\ApprovalActions;
 use Filament\Actions\EditAction;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
@@ -40,17 +42,13 @@ class ViewBooking extends ViewRecord
                                     ->dateTime('M d, Y H:i'),
                                 TextEntry::make('ends_at')
                                     ->dateTime('M d, Y H:i'),
-                                TextEntry::make('status')
-                                    ->badge()
-                                    ->color(fn(string $state): string => match ($state) {
-                                        'pending' => 'warning',
-                                        'approved' => 'success',
-                                        'rejected' => 'danger',
-                                        default => 'gray',
-                                    }),
                                 TextEntry::make('user.name')
                                     ->label('Booked by'),
                             ]),
+                    ]),
+                Section::make('Approval')
+                    ->components([
+                        ApprovalActions::make('booking_approval'),
                     ]),
                 Section::make('QR Code')
                     ->visible(fn(Booking $record): bool => $record->isApproved())
