@@ -2,20 +2,16 @@
 
 namespace App\Models;
 
-use App\Support\Approvals\Approval\SimpleApprovalBy;
-use App\Support\Approvals\Approval\SimpleApprovalFlow;
-use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
-use App\Support\Approvals\Contracts\Approvable;
-use App\Support\Approvals\Traits\HasApprovals;
+use App\Support\Approvals\Traits\HasApprovalFlow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Booking extends Model implements Approvable
+class Booking extends Model
 {
     /** @use HasFactory<\Database\Factories\BookingFactory> */
-    use HasFactory, HasApprovals;
+    use HasFactory, HasApprovalFlow;
 
     protected $fillable = [
         'room_id',
@@ -33,23 +29,6 @@ class Booking extends Model implements Approvable
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
-        ];
-    }
-
-    public function getApprovalFlows(): array
-    {
-        return [
-            'booking_approval' => SimpleApprovalFlow::make()
-                ->approvalStatus(BookingApprovalStatus::cases())
-                ->approvalBys([
-                    SimpleApprovalBy::make('requester')
-                        ->any()
-                        ->atLeast(1),
-                    SimpleApprovalBy::make('management')
-                        ->role('Admin')
-                        ->orRole('Super Admin')
-                        ->atLeast(1),
-                ]),
         ];
     }
 

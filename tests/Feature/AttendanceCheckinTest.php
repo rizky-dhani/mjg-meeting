@@ -1,11 +1,11 @@
 <?php
 
 use App\Livewire\AttendanceCheckin;
+use App\Models\ApprovalFlow;
 use App\Models\Attendance;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
-use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
 use App\Support\Approvals\Models\Approval;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -16,6 +16,19 @@ use function Pest\Laravel\actingAs;
 beforeEach(function () {
     Role::create(['name' => 'User']);
     Role::create(['name' => 'Admin']);
+
+    $userRole = Role::where('name', 'User')->first();
+    $adminRole = Role::where('name', 'Admin')->first();
+
+    $flow = ApprovalFlow::create([
+        'name' => 'Booking Approval',
+        'model_type' => Booking::class,
+    ]);
+
+    $flow->steps()->createMany([
+        ['role_id' => $userRole->id, 'step_order' => 1],
+        ['role_id' => $adminRole->id, 'step_order' => 2],
+    ]);
 
     $this->room = Room::factory()->create();
     $this->user = User::factory()->create()->assignRole('User');
@@ -31,26 +44,26 @@ beforeEach(function () {
         'qr_code' => url('/attendance/' . $qrToken),
     ]);
 
-    // Create requester approval
+    // Step 1: User approves (requester)
     Approval::create([
         'approver_id' => $this->user->id,
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Pending->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'requester',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'User',
     ]);
 
-    // Admin fully approves
+    // Step 2: Admin approves
     Approval::create([
         'approver_id' => $this->admin->id,
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Approved->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'management',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'Admin',
     ]);
 
     $this->booking->refresh();
@@ -108,9 +121,9 @@ it('shows expired for past meeting', function () {
         'approver_type' => User::class,
         'approvable_id' => $pastBooking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Pending->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'requester',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'User',
     ]);
 
     Approval::create([
@@ -118,9 +131,9 @@ it('shows expired for past meeting', function () {
         'approver_type' => User::class,
         'approvable_id' => $pastBooking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Approved->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'management',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'Admin',
     ]);
 
     actingAs($this->user);

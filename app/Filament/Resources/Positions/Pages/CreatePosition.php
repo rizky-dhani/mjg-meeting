@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\Roles\Pages;
+namespace App\Filament\Resources\Positions\Pages;
 
-use App\Filament\Resources\Roles\RoleResource;
+use App\Filament\Resources\Positions\PositionResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateRole extends CreateRecord
+class CreatePosition extends CreateRecord
 {
-    protected static string $resource = RoleResource::class;
+    protected static string $resource = PositionResource::class;
 
     protected function getRedirectUrl(): string
     {
@@ -19,7 +19,7 @@ class CreateRole extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Role created')
-            ->body('The role has been created successfully.');
+            ->title('Position created')
+            ->body('The position has been created successfully.');
     }
 }

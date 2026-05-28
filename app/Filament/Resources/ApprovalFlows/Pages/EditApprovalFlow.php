@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Roles\Pages;
+namespace App\Filament\Resources\ApprovalFlows\Pages;
 
-use App\Filament\Resources\Roles\RoleResource;
+use App\Filament\Resources\ApprovalFlows\ApprovalFlowsResource;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
-class EditRole extends EditRecord
+class EditApprovalFlow extends EditRecord
 {
-    protected static string $resource = RoleResource::class;
+    protected static string $resource = ApprovalFlowsResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -27,7 +27,7 @@ class EditRole extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Role updated')
-            ->body('The role has been updated successfully.');
+            ->title('Approval flow updated')
+            ->body('The approval flow has been updated successfully.');
     }
 }

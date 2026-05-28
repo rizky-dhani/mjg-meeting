@@ -33,8 +33,7 @@ class AttendanceCheckin extends Component
         $this->booking = Booking::query()
             ->where('qr_token', $this->qrToken)
             ->whereHas('approvals', function ($q) {
-                $q->where('key', 'booking_approval')
-                  ->where('status', \App\Support\Approvals\ApprovalStatus\BookingApprovalStatus::Approved->value);
+                $q->where('status', 'approved');
             })
             ->with(['room.location', 'attendance'])
             ->first();

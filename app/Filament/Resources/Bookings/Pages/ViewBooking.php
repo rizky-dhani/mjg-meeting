@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
+use App\Models\ApprovalFlow;
 use App\Models\Booking;
-use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
-use App\Support\Approvals\Filament\Components\ApprovalActions;
 use Filament\Actions\EditAction;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
@@ -46,9 +45,23 @@ class ViewBooking extends ViewRecord
                                     ->label('Booked by'),
                             ]),
                     ]),
-                Section::make('Approval')
+                Section::make('Approval Status')
                     ->components([
-                        ApprovalActions::make('booking_approval'),
+                        TextEntry::make('_approval_state')
+                            ->label('Status')
+                            ->badge()
+                            ->state(fn(Booking $record): string => ucfirst($record->approvalState()->value))
+                            ->color(fn(Booking $record): string => match ($record->approvalState()->value) {
+                                'approved' => 'success',
+                                'denied' => 'danger',
+                                'pending' => 'warning',
+                                'open' => 'gray',
+                                default => 'gray',
+                            }),
+                        TextEntry::make('_actionable_step')
+                            ->label('Current Step')
+                            ->state(fn(Booking $record): string => static::getActionableStepLabel($record))
+                            ->visible(fn(Booking $record): bool => ! $record->isApproved() && ! $record->isDenied()),
                     ]),
                 Section::make('QR Code')
                     ->visible(fn(Booking $record): bool => $record->isApproved())
@@ -72,5 +85,16 @@ class ViewBooking extends ViewRecord
         return [
             EditAction::make(),
         ];
+    }
+
+    protected static function getActionableStepLabel(Booking $record): string
+    {
+        $step = $record->currentActionableStep();
+
+        if ($step === null || $step->role === null) {
+            return 'Waiting...';
+        }
+
+        return "Step {$step->step_order}: {$step->role->name} approval required";
     }
 }

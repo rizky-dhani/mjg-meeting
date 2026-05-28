@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Bookings\Schemas;
 
+use App\Models\ApprovalFlow;
 use App\Models\Booking;
-use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -38,12 +38,14 @@ class BookingForm
                                         return;
                                     }
 
+                                    $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+                                    $flowName = $flow?->name ?? 'booking_approval';
+
                                     $overlap = Booking::where('room_id', $value)
-                                        ->where(function ($q) {
-                                            $q->whereDoesntHave('approvals', function ($q2) {
-                                                $q2->where('key', 'booking_approval')
-                                                   ->where('approval_by', 'management')
-                                                   ->where('status', BookingApprovalStatus::Rejected->value);
+                                        ->where(function ($q) use ($flowName) {
+                                            $q->whereDoesntHave('approvals', function ($q2) use ($flowName) {
+                                                $q2->where('key', $flowName)
+                                                   ->whereIn('status', ['rejected', 'denied']);
                                             });
                                         })
                                         ->where(function ($query) use ($startsAt, $endsAt) {

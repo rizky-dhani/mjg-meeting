@@ -1,10 +1,10 @@
 <?php
 
+use App\Models\ApprovalFlow;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\Room;
-use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
-use App\Support\Approvals\Enums\ApprovalState;
+use App\Support\Approvals\Evaluation\ApprovalState;
 use App\Support\Approvals\Models\Approval;
 use Spatie\Permission\Models\Role;
 
@@ -12,10 +12,21 @@ beforeEach(function () {
     Role::create(['name' => 'User']);
     Role::create(['name' => 'Admin']);
 
+    $userRole = Role::where('name', 'User')->first();
+    $adminRole = Role::where('name', 'Admin')->first();
+
+    $flow = ApprovalFlow::create([
+        'name' => 'Booking Approval',
+        'model_type' => Booking::class,
+    ]);
+
+    $flow->steps()->createMany([
+        ['role_id' => $userRole->id, 'step_order' => 1],
+        ['role_id' => $adminRole->id, 'step_order' => 2],
+    ]);
+
     $this->admin = User::factory()->create()->assignRole('Admin');
-
     $this->user = User::factory()->create()->assignRole('User');
-
     $this->room = Room::factory()->create();
 
     $this->booking = Booking::factory()->create([
@@ -25,7 +36,7 @@ beforeEach(function () {
 });
 
 test('new booking is in open state', function () {
-    expect($this->booking->approved())->toBe(ApprovalState::OPEN);
+    expect($this->booking->approvalState())->toBe(ApprovalState::Open);
     expect($this->booking->isOpen())->toBeTrue();
     expect($this->booking->isApproved())->toBeFalse();
     expect($this->booking->isPending())->toBeFalse();
@@ -39,9 +50,9 @@ test('requester can submit approval as pending', function () {
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Pending->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'requester',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'User',
     ]);
 
     $this->booking->refresh();
@@ -51,27 +62,27 @@ test('requester can submit approval as pending', function () {
 });
 
 test('admin can fully approve a booking', function () {
-    // Requester signs off
+    // Step 1: User signs off
     Approval::create([
         'approver_id' => $this->user->id,
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Approved->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'requester',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'User',
     ]);
 
-    // Admin approves
+    // Step 2: Admin approves
     $this->actingAs($this->admin);
     Approval::create([
         'approver_id' => $this->admin->id,
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Approved->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'management',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'Admin',
     ]);
 
     $this->booking->refresh();
@@ -80,15 +91,15 @@ test('admin can fully approve a booking', function () {
 });
 
 test('admin can reject a booking', function () {
-    // Requester submits
+    // Step 1: User approves
     Approval::create([
         'approver_id' => $this->user->id,
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Pending->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'requester',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'User',
     ]);
 
     // Admin rejects
@@ -98,9 +109,9 @@ test('admin can reject a booking', function () {
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Rejected->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'management',
+        'status' => 'rejected',
+        'key' => 'Booking Approval',
+        'approval_by' => 'Admin',
     ]);
 
     $this->booking->refresh();
@@ -108,37 +119,36 @@ test('admin can reject a booking', function () {
     expect($this->booking->isDenied())->toBeTrue();
 });
 
-test('approval flow shows correct statistics', function () {
+test('non-admin user cannot approve admin step', function () {
+    $this->actingAs($this->user);
+    $step = $this->booking->currentActionableStep();
+
+    expect($step)->not->toBeNull();
+    expect($step->role->name)->toBe('User');
+
+    // The admin step should not be actionable yet
+    $adminStep = $this->booking->approvalFlow()->steps->where('role.name', 'Admin')->first();
+    expect($adminStep->step_order)->not->toBe($step->step_order);
+});
+
+test('admin can approve when it is their turn', function () {
+    // Step 1: User approves first
     Approval::create([
         'approver_id' => $this->user->id,
         'approver_type' => User::class,
         'approvable_id' => $this->booking->id,
         'approvable_type' => Booking::class,
-        'status' => BookingApprovalStatus::Approved->value,
-        'key' => 'booking_approval',
-        'approval_by' => 'requester',
+        'status' => 'approved',
+        'key' => 'Booking Approval',
+        'approval_by' => 'User',
     ]);
 
-    $stats = $this->booking->approvalStatistics();
+    $this->booking->refresh();
 
-    expect($stats)->toHaveKey('booking_approval');
-    expect($stats['booking_approval']['by_statistics']['requester']['count'])->toBe(1);
-});
-
-test('non-admin user cannot approve via management', function () {
-    $this->actingAs($this->user);
-    $flow = $this->booking->getApprovalFlow('booking_approval');
-    $managementBy = collect($flow->getApprovalBys())
-        ->first(fn($by) => $by->getName() === 'management');
-
-    expect($managementBy->canApprove($this->user, $this->booking))->toBeFalse();
-});
-
-test('admin can approve via management', function () {
+    // Now admin step should be actionable
     $this->actingAs($this->admin);
-    $flow = $this->booking->getApprovalFlow('booking_approval');
-    $managementBy = collect($flow->getApprovalBys())
-        ->first(fn($by) => $by->getName() === 'management');
+    $step = $this->booking->currentActionableStep();
 
-    expect($managementBy->canApprove($this->admin, $this->booking))->toBeTrue();
+    expect($step)->not->toBeNull();
+    expect($step->role->name)->toBe('Admin');
 });

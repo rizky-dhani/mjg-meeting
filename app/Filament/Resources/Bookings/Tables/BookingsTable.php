@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Bookings\Tables;
 
+use App\Models\ApprovalFlow;
 use App\Models\Booking;
-use App\Support\Approvals\ApprovalStatus\BookingApprovalStatus;
-use App\Support\Approvals\Enums\ApprovalState;
+use App\Support\Approvals\Evaluation\ApprovalState;
 use App\Support\Approvals\Models\Approval;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -46,16 +46,11 @@ class BookingsTable
                 TextColumn::make('approval_state')
                     ->label('Status')
                     ->badge()
-                    ->getStateUsing(fn(Booking $record): string => match ($record->approved()) {
-                        ApprovalState::APPROVED => 'approved',
-                        ApprovalState::DENIED => 'rejected',
-                        ApprovalState::PENDING => 'pending',
-                        ApprovalState::OPEN => 'open',
-                    })
+                    ->getStateUsing(fn(Booking $record): string => $record->approvalState()->value)
                     ->color(fn(string $state): string => match ($state) {
                         'approved' => 'success',
                         'pending' => 'warning',
-                        'rejected' => 'danger',
+                        'denied' => 'danger',
                         'open' => 'gray',
                         default => 'gray',
                     })
@@ -68,33 +63,28 @@ class BookingsTable
                         'open' => 'Open',
                         'pending' => 'Pending',
                         'approved' => 'Approved',
-                        'rejected' => 'Rejected',
+                        'denied' => 'Denied',
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (! $data['value']) {
                             return;
                         }
 
+                        $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+                        if (! $flow) {
+                            return;
+                        }
+
                         match ($data['value']) {
-                            'approved' => $query->whereHas('approvals', function ($q) {
-                                $q->where('key', 'booking_approval')
-                                  ->where('status', BookingApprovalStatus::Approved->value);
+                            'approved' => $query->whereHas('approvals', function ($q) use ($flow) {
+                                $q->where('key', $flow->name);
                             }),
-                            'pending' => $query->whereHas('approvals', function ($q) {
-                                $q->where('key', 'booking_approval')
-                                  ->where('status', BookingApprovalStatus::Pending->value);
-                            })->whereDoesntHave('approvals', function ($q) {
-                                $q->where('key', 'booking_approval')
-                                  ->where('approval_by', 'management')
-                                  ->where('status', BookingApprovalStatus::Approved->value);
+                            'denied' => $query->whereHas('approvals', function ($q) use ($flow) {
+                                $q->where('key', $flow->name)
+                                  ->whereIn('status', ['denied', 'rejected']);
                             }),
-                            'rejected' => $query->whereHas('approvals', function ($q) {
-                                $q->where('key', 'booking_approval')
-                                  ->where('approval_by', 'management')
-                                  ->where('status', BookingApprovalStatus::Rejected->value);
-                            }),
-                            'open' => $query->whereDoesntHave('approvals', function ($q) {
-                                $q->where('key', 'booking_approval');
+                            'open' => $query->whereDoesntHave('approvals', function ($q) use ($flow) {
+                                $q->where('key', $flow->name);
                             }),
                             default => null,
                         };
@@ -109,76 +99,16 @@ class BookingsTable
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn(Booking $record): bool =>
-                        $record->isPending() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')))
+                    ->visible(fn(Booking $record): bool => static::canApproveStep($record))
                     ->requiresConfirmation()
                     ->action(function (Booking $record) {
-                        $flow = $record->getApprovalFlow('booking_approval');
-                        $managementBy = collect($flow->getApprovalBys())
-                            ->first(fn($by) => $by->getName() === 'management');
-
-                        if ($managementBy) {
-                            Approval::create([
-                                'approver_id' => auth()->id(),
-                                'approver_type' => \App\Models\User::class,
-                                'approvable_id' => $record->id,
-                                'approvable_type' => Booking::class,
-                                'status' => BookingApprovalStatus::Approved->value,
-                                'key' => 'booking_approval',
-                                'approval_by' => 'management',
-                            ]);
-                        }
-
-                        // If the requester hasn't submitted yet, auto-submit
-                        $requesterApproval = $record->approvals
-                            ->where('key', 'booking_approval')
-                            ->where('approval_by', 'requester')
-                            ->first();
-
-                        if (! $requesterApproval) {
-                            Approval::create([
-                                'approver_id' => $record->user_id,
-                                'approver_type' => \App\Models\User::class,
-                                'approvable_id' => $record->id,
-                                'approvable_type' => Booking::class,
-                                'status' => BookingApprovalStatus::Pending->value,
-                                'key' => 'booking_approval',
-                                'approval_by' => 'requester',
-                            ]);
-                        }
-
-                        $record->refresh();
-
-                        // If fully approved, generate QR code and notification
-                        if ($record->isApproved()) {
-                            $qrToken = (string) Str::uuid();
-                            $qrCodeUrl = url('/attendance/' . $qrToken);
-
-                            $record->update([
-                                'qr_token' => $qrToken,
-                                'qr_code' => $qrCodeUrl,
-                            ]);
-
-                            // Auto-check-in the booker
-                            $record->attendance()->create([
-                                'user_id' => $record->user_id,
-                                'checked_in_at' => now(),
-                            ]);
-
-                            $record->user->notify(new \App\Notifications\BookingApproved($record));
-                        }
-
-                        Notification::make()
-                            ->title('Booking approved successfully')
-                            ->success()
-                            ->send();
+                        static::processApproval($record, 'approved');
                     }),
                 Action::make('reject')
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn(Booking $record): bool =>
-                        $record->isPending() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')))
+                    ->visible(fn(Booking $record): bool => static::canApproveStep($record))
                     ->requiresConfirmation()
                     ->form([
                         \Filament\Forms\Components\Textarea::make('reason')
@@ -186,24 +116,11 @@ class BookingsTable
                             ->required(),
                     ])
                     ->action(function (Booking $record, array $data) {
-                        Approval::create([
-                            'approver_id' => auth()->id(),
-                            'approver_type' => \App\Models\User::class,
-                            'approvable_id' => $record->id,
-                            'approvable_type' => Booking::class,
-                            'status' => BookingApprovalStatus::Rejected->value,
-                            'key' => 'booking_approval',
-                            'approval_by' => 'management',
-                        ]);
+                        static::processApproval($record, 'rejected');
 
-                        $record->refresh();
-
-                        $record->user->notify(new \App\Notifications\BookingRejected($record, $data['reason'] ?? null));
-
-                        Notification::make()
-                            ->title('Booking rejected')
-                            ->warning()
-                            ->send();
+                        $record->user->notify(
+                            new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
+                        );
                     }),
             ])
             ->toolbarActions([
@@ -225,5 +142,70 @@ class BookingsTable
         }
 
         return $query->where('user_id', $user->id);
+    }
+
+    protected static function canApproveStep(Booking $record): bool
+    {
+        $step = $record->currentActionableStep();
+
+        if ($step === null || $step->role === null) {
+            return false;
+        }
+
+        return auth()->user()->hasRole($step->role->name);
+    }
+
+    protected static function processApproval(Booking $record, string $status): void
+    {
+        $step = $record->currentActionableStep();
+
+        if ($step === null || $step->role === null) {
+            Notification::make()
+                ->title('No pending steps to approve')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $flow = $record->approvalFlow();
+
+        if ($flow === null) {
+            return;
+        }
+
+        Approval::create([
+            'approver_id' => auth()->id(),
+            'approver_type' => \App\Models\User::class,
+            'approvable_id' => $record->id,
+            'approvable_type' => Booking::class,
+            'status' => $status,
+            'key' => $flow->name,
+            'approval_by' => $step->role->name,
+        ]);
+
+        $record->refresh();
+
+        if ($status === 'approved' && $record->isApproved()) {
+            $qrToken = (string) Str::uuid();
+            $qrCodeUrl = url('/attendance/' . $qrToken);
+
+            $record->update([
+                'qr_token' => $qrToken,
+                'qr_code' => $qrCodeUrl,
+            ]);
+
+            $record->attendance()->create([
+                'user_id' => $record->user_id,
+                'checked_in_at' => now(),
+            ]);
+
+            $record->user->notify(new \App\Notifications\BookingApproved($record));
+        }
+
+        Notification::make()
+            ->title($status === 'approved' ? 'Booking approved successfully' : 'Booking rejected')
+            ->{$status === 'approved' ? 'success' : 'warning'}()
+            ->send();
     }
 }
