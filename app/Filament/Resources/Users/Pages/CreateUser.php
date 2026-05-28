@@ -27,6 +27,7 @@ class CreateUser extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('User created');
+            ->title('User created')
+            ->body('The user has been created successfully.');
     }
 }
