@@ -22,8 +22,6 @@ class PositionResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-briefcase';
 
-    protected static ?string $navigationParentItem = 'Employees';
-
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

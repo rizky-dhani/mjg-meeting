@@ -20,9 +20,9 @@ class DepartmentsTable
                 TextColumn::make('code')
                     ->searchable()
                     ->badge(),
-                TextColumn::make('employees_count')
-                    ->counts('employees')
-                    ->label('Employees'),
+                TextColumn::make('users_count')
+                    ->counts('users')
+                    ->label('Users'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
