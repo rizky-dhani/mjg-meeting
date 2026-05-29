@@ -21,9 +21,9 @@ class DatabaseSeeder extends Seeder
         $warehouse = Location::create(['name' => 'Warehouse', 'address' => '456 Industrial Ave']);
 
         // Demo departments
-        Department::create(['name' => 'Information Technology', 'code' => 'IT']);
-        Department::create(['name' => 'Human Resources', 'code' => 'HR']);
-        Department::create(['name' => 'Marketing', 'code' => 'MKT']);
+        Department::firstOrCreate(['code' => 'IT'], ['name' => 'Information Technology']);
+        Department::firstOrCreate(['code' => 'HR'], ['name' => 'Human Resources']);
+        Department::firstOrCreate(['code' => 'MKT'], ['name' => 'Marketing']);
 
         // Demo rooms
         Room::create(['location_id' => $headOffice->id, 'name' => 'Meeting Room A', 'capacity' => 10]);
