@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Bookings\Tables;
 
 use App\Models\ApprovalFlow;
 use App\Models\Booking;
+use App\Models\Employee;
 use App\Support\Approvals\Evaluation\ApprovalState;
 use App\Support\Approvals\Models\Approval;
 use Filament\Actions\BulkActionGroup;
@@ -142,7 +143,16 @@ class BookingsTable
             return $query;
         }
 
-        return $query->where('user_id', $user->id);
+        $employee = $user->employee;
+
+        if (! $employee || ! $employee->department_id) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $departmentUserIds = Employee::where('department_id', $employee->department_id)
+            ->pluck('user_id');
+
+        return $query->whereIn('user_id', $departmentUserIds);
     }
 
     protected static function canApproveStep(Booking $record): bool

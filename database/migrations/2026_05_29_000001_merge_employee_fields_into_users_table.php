@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('phone', 50)->nullable()->after('initials');
         });
 
+        // WARNING: If this environment has existing employee data, run a
+        // separate data migration first to copy data from employees to users.
         Schema::dropIfExists('employees');
     }
 
