@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ApprovalFlow;
 use App\Support\Approvals\Traits\HasApprovalFlow;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,9 +32,31 @@ class Booking extends Model
     {
         return [
             'date' => 'date',
-            'starts_at' => 'time',
-            'ends_at' => 'time',
         ];
+    }
+
+    protected function startsAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value !== null
+                ? Carbon::parse($this->date->format('Y-m-d') . ' ' . $value)
+                : null,
+            set: fn ($value) => $value !== null
+                ? Carbon::parse($value)->format('H:i:s')
+                : null,
+        );
+    }
+
+    protected function endsAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value !== null
+                ? Carbon::parse($this->date->format('Y-m-d') . ' ' . $value)
+                : null,
+            set: fn ($value) => $value !== null
+                ? Carbon::parse($value)->format('H:i:s')
+                : null,
+        );
     }
 
     public function room(): BelongsTo

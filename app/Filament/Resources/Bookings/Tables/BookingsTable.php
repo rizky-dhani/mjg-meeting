@@ -37,19 +37,17 @@ class BookingsTable
                     ->searchable()
                     ->label('Booked by'),
                 TextColumn::make('date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('starts_at')
-                    ->time()
-                    ->sortable(),
-                TextColumn::make('ends_at')
-                    ->time()
                     ->sortable()
-                    ->toggleable(),
+                    ->state(fn (Booking $record): string => strtoupper($record->date->format('d F Y'))),
+                TextColumn::make('time')
+                    ->label('Time')
+                    ->state(fn (Booking $record): string => $record->starts_at->format('H:i') . ' - ' . $record->ends_at->format('H:i'))
+                    ->sortable(['starts_at', 'ends_at']),
                 TextColumn::make('approval_state')
                     ->label('Status')
                     ->badge()
                     ->getStateUsing(fn(Booking $record): string => $record->approvalState()->value)
+                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
                     ->color(fn(string $state): string => match ($state) {
                         'approved' => 'success',
                         'pending' => 'warning',

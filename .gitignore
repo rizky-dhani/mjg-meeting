@@ -26,5 +26,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .agents
+.commandcode/
+.tmp/
 boost.json
 opencode.json
