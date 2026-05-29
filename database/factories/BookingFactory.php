@@ -16,14 +16,16 @@ class BookingFactory extends Factory
     {
         $startsAt = fake()->dateTimeBetween('+1 day', '+1 week');
         $endsAt = (clone $startsAt)->modify('+1 hour');
+        $date = $startsAt->format('Y-m-d');
 
         return [
             'room_id' => Room::factory(),
             'user_id' => User::factory(),
             'title' => fake()->sentence(4),
             'description' => fake()->paragraph(),
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
+            'date' => $date,
+            'starts_at' => $startsAt->format('H:i:s'),
+            'ends_at' => $endsAt->format('H:i:s'),
         ];
     }
 }

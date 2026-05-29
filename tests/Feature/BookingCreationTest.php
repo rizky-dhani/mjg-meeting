@@ -23,6 +23,7 @@ it('a user can create a booking via the model', function () {
         'user_id' => $this->user->id,
         'title' => 'Team Standup',
         'description' => 'Daily team sync',
+        'date' => now()->addDay()->format('Y-m-d'),
         'starts_at' => now()->addDay(),
         'ends_at' => now()->addDay()->addHour(),
     ]);

@@ -12,14 +12,9 @@ class DepartmentFactory extends Factory
 {
     public function definition(): array
     {
-        $departments = [
-            ['name' => 'Information Technology', 'code' => 'IT'],
-            ['name' => 'Human Resources', 'code' => 'HR'],
-            ['name' => 'Finance', 'code' => 'FIN'],
-            ['name' => 'Marketing', 'code' => 'MKT'],
-            ['name' => 'Operations', 'code' => 'OPS'],
+        return [
+            'name' => fake()->company(),
+            'code' => fake()->unique()->lexify('???'),
         ];
-
-        return fake()->randomElement($departments);
     }
 }
