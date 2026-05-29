@@ -4,13 +4,15 @@ namespace App\Filament\Resources\Bookings\Schemas;
 
 use App\Models\ApprovalFlow;
 use App\Models\Booking;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Get;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
 class BookingForm
@@ -19,8 +21,12 @@ class BookingForm
     {
         return $schema
             ->components([
-                Section::make('Room & Booking')
+                Section::make('Booking Information')
+                    ->columns(2)
                     ->schema([
+                        TextInput::make('title')
+                            ->required()
+                            ->maxLength(255),
                         Select::make('room_id')
                             ->relationship('room', 'name', fn(Builder $query) => $query->with('location'))
                             ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} ({$record->location?->name})")
@@ -31,10 +37,11 @@ class BookingForm
                             ->disabledOn('edit')
                             ->rules([
                                 fn (Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $date = $get('date');
                                     $startsAt = $get('starts_at');
                                     $endsAt = $get('ends_at');
 
-                                    if (! $startsAt || ! $endsAt) {
+                                    if (! $date || ! $startsAt || ! $endsAt) {
                                         return;
                                     }
 
@@ -42,6 +49,7 @@ class BookingForm
                                     $flowName = $flow?->name ?? 'booking_approval';
 
                                     $overlap = Booking::where('room_id', $value)
+                                        ->where('date', $date)
                                         ->where(function ($q) use ($flowName) {
                                             $q->whereDoesntHave('approvals', function ($q2) use ($flowName) {
                                                 $q2->where('key', $flowName)
@@ -63,29 +71,40 @@ class BookingForm
                                     }
                                 },
                             ]),
-                        TextInput::make('title')
-                            ->required()
-                            ->maxLength(255),
+                        Textarea::make('description')
+                            ->columnSpanFull(),
                     ]),
                 Section::make('Schedule')
+                    ->columns(2)
                     ->schema([
-                        DateTimePicker::make('starts_at')
+                        DatePicker::make('date')
+                            ->required()
+                            ->disabledOn('edit')
+                            ->columnSpanFull()
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->closeOnDateSelection()
+                            ->default(now()),
+                        TimePicker::make('starts_at')
                             ->required()
                             ->before('ends_at')
                             ->seconds(false)
+                            ->format('H:i')
+                            ->native(false)
+                            ->displayFormat('H:i')
+                            ->suffixIcon(Heroicon::Clock)
+                            ->default('00:00')
                             ->disabledOn('edit'),
-                        DateTimePicker::make('ends_at')
+                        TimePicker::make('ends_at')
                             ->required()
                             ->after('starts_at')
                             ->seconds(false)
+                            ->format('H:i')
+                            ->native(false)
+                            ->displayFormat('H:i')
+                            ->suffixIcon(Heroicon::Clock)
+                            ->default('00:00')
                             ->disabledOn('edit'),
-                    ]),
-                Section::make('Details')
-                    ->collapsible()
-                    ->collapsed()
-                    ->schema([
-                        Textarea::make('description')
-                            ->columnSpanFull(),
                     ]),
             ]);
     }

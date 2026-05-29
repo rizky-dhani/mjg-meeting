@@ -1,0 +1,33 @@
+{
+  "id": "simple-approval-05",
+  "seq": "05",
+  "title": "Update Booking model to use new ApprovalEvaluator system",
+  "status": "pending",
+  "depends_on": ["03"],
+  "parallel": false,
+  "suggested_agent": "CoderAgent",
+  "context_files": [
+    ".opencode/context/core/standards/code-quality.md"
+  ],
+  "reference_files": [
+    "app/Models/Booking.php",
+    "app/Support/Approvals/Evaluation/ApprovalEvaluator.php",
+    "app/Support/Approvals/Traits/HasApprovals.php",
+    "app/Support/Approvals/Concerns/HandlesApprovals.php",
+    "app/Support/Approvals/Approval/SimpleApprovalFlow.php"
+  ],
+  "acceptance_criteria": [
+    "Booking model no longer implements Approvable interface",
+    "HasApprovals trait removed from Booking model",
+    "getApprovalFlows() method removed from Booking model",
+    "New isApproved() method added using ApprovalEvaluator",
+    "New isPending() method added using ApprovalEvaluator",
+    "New isOpen() method added using ApprovalEvaluator",
+    "New isDenied() method added using ApprovalEvaluator",
+    "All other existing Booking functionality preserved (QR code, notifications, relationships)",
+    "Existing tests still pass"
+  ],
+  "deliverables": [
+    "app/Models/Booking.php"
+  ]
+}

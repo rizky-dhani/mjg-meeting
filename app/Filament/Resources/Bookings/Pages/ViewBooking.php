@@ -35,12 +35,14 @@ class ViewBooking extends ViewRecord
                             ->components([
                                 TextEntry::make('room.name')
                                     ->label('Room'),
+                                TextEntry::make('date')
+                                    ->date(),
                                 TextEntry::make('room.location.name')
                                     ->label('Location'),
                                 TextEntry::make('starts_at')
-                                    ->dateTime('M d, Y H:i'),
+                                    ->time(),
                                 TextEntry::make('ends_at')
-                                    ->dateTime('M d, Y H:i'),
+                                    ->time(),
                                 TextEntry::make('user.name')
                                     ->label('Booked by'),
                             ]),

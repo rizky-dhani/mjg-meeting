@@ -36,11 +36,14 @@ class BookingsTable
                     ->sortable()
                     ->searchable()
                     ->label('Booked by'),
+                TextColumn::make('date')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('starts_at')
-                    ->dateTime('M d, Y H:i')
+                    ->time()
                     ->sortable(),
                 TextColumn::make('ends_at')
-                    ->dateTime('M d, Y H:i')
+                    ->time()
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('approval_state')

@@ -1,0 +1,30 @@
+{
+  "id": "simple-approval-02",
+  "seq": "02",
+  "title": "Create ApprovalFlow and ApprovalFlowStep Eloquent models",
+  "status": "pending",
+  "depends_on": ["01"],
+  "parallel": false,
+  "suggested_agent": "CoderAgent",
+  "context_files": [
+    ".opencode/context/core/standards/code-quality.md"
+  ],
+  "reference_files": [
+    "app/Support/Approvals/Models/Approval.php",
+    "app/Models/Booking.php",
+    "app/Models/Role.php"
+  ],
+  "acceptance_criteria": [
+    "App\\Models\\ApprovalFlow created with name, model_type, description fillable",
+    "ApprovalFlow has steps() HasMany relationship ordered by step_order",
+    "App\\Models\\ApprovalFlowStep created with approval_flow_id, role_id, step_order fillable",
+    "ApprovalFlowStep has approvalFlow() BelongsTo relationship",
+    "ApprovalFlowStep has role() BelongsTo relationship to Spatie Role model (App\\Models\\Role)",
+    "Both models use proper table names (approval_flows, approval_flow_steps)",
+    "Both models have timestamps enabled"
+  ],
+  "deliverables": [
+    "app/Models/ApprovalFlow.php",
+    "app/Models/ApprovalFlowStep.php"
+  ]
+}

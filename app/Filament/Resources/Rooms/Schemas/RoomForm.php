@@ -15,24 +15,22 @@ class RoomForm
         return $schema
             ->components([
                 Section::make('Room Info')
+                    ->columnSpanFull()
+                    ->columns(3)
                     ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
                         Select::make('location_id')
                             ->relationship('location', 'name')
                             ->required()
                             ->searchable()
                             ->preload(),
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255),
                         TextInput::make('capacity')
-                            ->required()
                             ->numeric()
-                            ->minValue(1),
-                    ]),
-                Section::make('Details')
-                    ->collapsible()
-                    ->collapsed()
-                    ->schema([
+                            ->minValue(1)
+                            ->placeholder('Unlimited')
+                            ->helperText('If capacity is not specified, the room is considered unlimited.'),
                         Textarea::make('description')
                             ->columnSpanFull(),
                     ]),

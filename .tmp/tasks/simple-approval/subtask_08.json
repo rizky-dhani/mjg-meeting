@@ -1,0 +1,34 @@
+{
+  "id": "simple-approval-08",
+  "seq": "08",
+  "title": "Create default Booking Approval seeder and integrate notifications",
+  "status": "pending",
+  "depends_on": ["01", "02"],
+  "parallel": true,
+  "suggested_agent": "CoderAgent",
+  "context_files": [
+    ".opencode/context/core/standards/code-quality.md",
+    ".opencode/context/core/standards/test-coverage.md"
+  ],
+  "reference_files": [
+    "app/Support/Approvals/Evaluation/ApprovalEvaluator.php",
+    "app/Models/ApprovalFlow.php",
+    "app/Models/Booking.php",
+    "app/Notifications/BookingApproved.php",
+    "app/Notifications/BookingRejected.php",
+    "app/Models/Role.php"
+  ],
+  "acceptance_criteria": [
+    "Database seeder creates a default 'Booking Approval' flow",
+    "Default flow has model_type set to App\\Models\\Booking::class",
+    "Default flow includes steps for: requester role and Admin role",
+    "BookingApproved notification still triggers on approval",
+    "BookingRejected notification still triggers on rejection",
+    "Seeder is idempotent (can be run multiple times without duplicates)",
+    "Seeder can be called from DatabaseSeeder.php"
+  ],
+  "deliverables": [
+    "database/seeders/ApprovalFlowSeeder.php",
+    "Updated database/seeders/DatabaseSeeder.php"
+  ]
+}

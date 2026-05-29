@@ -1,0 +1,38 @@
+{
+  "id": "simple-approval-04",
+  "seq": "04",
+  "title": "Create ApprovalFlows Filament resource under System Management",
+  "status": "pending",
+  "depends_on": ["02"],
+  "parallel": true,
+  "suggested_agent": "CoderAgent",
+  "context_files": [
+    ".opencode/context/core/standards/code-quality.md"
+  ],
+  "reference_files": [
+    "app/Filament/Resources/Roles/RoleResource.php",
+    "app/Providers/Filament/DashboardPanelProvider.php",
+    "docs/superpowers/specs/2026-05-22-approval-flow-management-design.md",
+    "app/Models/ApprovalFlow.php",
+    "app/Models/ApprovalFlowStep.php",
+    "app/Models/Role.php"
+  ],
+  "acceptance_criteria": [
+    "ApprovalFlows resource created under System Management navigation group",
+    "List page shows table with: name, model_type (badge), step count, created_at",
+    "Create page has fields: name, description, model_type (select), steps repeater",
+    "Steps repeater includes: role select dropdown (from Spatie roles), auto-generated step_order",
+    "Edit page mirrors Create page layout",
+    "Follows existing pattern: Resources/ApprovalFlows/ with Pages/, Tables/, Schemas/ structure",
+    "Navigation group matches existing DashboardPanelProvider configuration",
+    "Validation: name required, model_type required, at least one step required"
+  ],
+  "deliverables": [
+    "app/Filament/Resources/ApprovalFlows/ApprovalFlowsResource.php",
+    "app/Filament/Resources/ApprovalFlows/Pages/ListApprovalFlows.php",
+    "app/Filament/Resources/ApprovalFlows/Pages/CreateApprovalFlow.php",
+    "app/Filament/Resources/ApprovalFlows/Pages/EditApprovalFlow.php",
+    "app/Filament/Resources/ApprovalFlows/Tables/ApprovalFlowsTable.php",
+    "app/Filament/Resources/ApprovalFlows/Schemas/ApprovalFlowForm.php"
+  ]
+}
