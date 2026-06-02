@@ -150,6 +150,24 @@ class BookingsTable
             return $query;
         }
 
+        // If the user has a role that matches an approval flow step,
+        // they are a potential approver and need visibility into bookings
+        // that may require their action. The actual approve/reject action
+        // is gated by canApproveStep() which enforces step, scope, and department checks.
+        $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+        if ($flow) {
+            $userRoleNames = $user->getRoleNames();
+            $isApprover = $flow->steps()
+                ->whereHas('role', function ($q) use ($userRoleNames) {
+                    $q->whereIn('name', $userRoleNames);
+                })
+                ->exists();
+
+            if ($isApprover) {
+                return $query;
+            }
+        }
+
         // Head: sees department-scoped bookings for approval
         if ($user->hasRole('Head')) {
             $departmentUserIds = User::where('department_id', $user->department_id)
