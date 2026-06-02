@@ -126,7 +126,7 @@ class Booking extends Model
     protected static function booted(): void
     {
         static::created(function (Booking $booking) {
-            $booking->booking_number = sprintf('MJG-BK-%s-%06d', $booking->date->format('Ymd'), $booking->id);
+            $booking->booking_number = sprintf('MJG-BK-%s-%06d', $booking->date->format('Y'), $booking->id);
             $booking->save();
         });
 
