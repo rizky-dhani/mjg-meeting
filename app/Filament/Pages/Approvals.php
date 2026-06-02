@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
+use App\Filament\Resources\Bookings\Tables\BookingsTable;
 use App\Models\ApprovalFlow;
 use App\Models\ApprovalFlowStep;
 use App\Models\Booking;
@@ -12,7 +13,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
+use Filament\Notifications\Notification;
+use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -144,6 +146,33 @@ class Approvals extends Page implements HasTable
     protected function getTableActions(): array
     {
         return [
+            Action::make('approve')
+                ->label('Approve')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
+                ->requiresConfirmation()
+                ->action(function (Booking $record) {
+                    BookingsTable::processApproval($record, 'approved');
+                }),
+            Action::make('reject')
+                ->label('Reject')
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
+                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
+                ->requiresConfirmation()
+                ->form([
+                    \Filament\Forms\Components\Textarea::make('reason')
+                        ->label('Reason for rejection')
+                        ->required(),
+                ])
+                ->action(function (Booking $record, array $data) {
+                    BookingsTable::processApproval($record, 'rejected');
+
+                    $record->user->notify(
+                        new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
+                    );
+                }),
             ViewAction::make()
                 ->url(fn (Booking $record): string => BookingResource::getUrl('view', ['record' => $record])),
         ];

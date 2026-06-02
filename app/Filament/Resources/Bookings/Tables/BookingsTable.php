@@ -180,7 +180,7 @@ class BookingsTable
         return $query->where('booker_id', $user->id);
     }
 
-    protected static function canApproveStep(Booking $record): bool
+    public static function canApproveStep(Booking $record): bool
     {
         // Admin: CRUD without Approval
         if (auth()->user()->hasRole('Admin')) {
@@ -211,7 +211,7 @@ class BookingsTable
         };
     }
 
-    protected static function processApproval(Booking $record, string $status): void
+    public static function processApproval(Booking $record, string $status): void
     {
         $step = $record->currentActionableStep();
 
