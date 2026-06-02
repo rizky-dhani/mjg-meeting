@@ -18,6 +18,7 @@ class Booking extends Model
     use HasFactory, HasApprovalFlow;
 
     protected $fillable = [
+        'booking_number',
         'room_id',
         'user_id',
         'booker_id',
@@ -124,6 +125,12 @@ class Booking extends Model
 
     protected static function booted(): void
     {
+        static::created(function (Booking $booking) {
+            $deptCode = $booking->booker?->department?->code ?? 'XX';
+            $booking->booking_number = sprintf('MJG-%s-BK-%06d', $deptCode, $booking->id);
+            $booking->save();
+        });
+
         static::deleting(function (Booking $booking) {
             if (! $booking->isPending()) {
                 throw new \Exception('Only bookings with pending status can be deleted.');

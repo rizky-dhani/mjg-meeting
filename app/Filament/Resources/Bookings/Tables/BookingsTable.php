@@ -26,6 +26,17 @@ class BookingsTable
         return $table
             ->modifyQueryUsing(fn(Builder $query) => static::scopeQuery($query))
             ->columns([
+                TextColumn::make('booking_number')
+                    ->label('Booking #')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('date')
+                    ->sortable()
+                    ->state(fn (Booking $record): string => strtoupper($record->date->format('d F Y'))),
+                TextColumn::make('time')
+                    ->label('Time')
+                    ->state(fn (Booking $record): string => $record->starts_at->format('H:i') . ' - ' . $record->ends_at->format('H:i'))
+                    ->sortable(['starts_at', 'ends_at']),
                 TextColumn::make('title')
                     ->searchable()
                     ->sortable()
@@ -37,13 +48,6 @@ class BookingsTable
                     ->sortable()
                     ->searchable()
                     ->label('Booked by'),
-                TextColumn::make('date')
-                    ->sortable()
-                    ->state(fn (Booking $record): string => strtoupper($record->date->format('d F Y'))),
-                TextColumn::make('time')
-                    ->label('Time')
-                    ->state(fn (Booking $record): string => $record->starts_at->format('H:i') . ' - ' . $record->ends_at->format('H:i'))
-                    ->sortable(['starts_at', 'ends_at']),
                 TextColumn::make('approval_state')
                     ->label('Status')
                     ->badge()
