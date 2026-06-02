@@ -6,7 +6,7 @@ use App\Models\Booking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Milon\Barcode\Facades\DNS2DFacade;
+use Illuminate\Support\Facades\Storage;
 
 class BookingApproved extends Notification
 {
@@ -23,7 +23,7 @@ class BookingApproved extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $qrCodePng = DNS2DFacade::getBarcodePNG($this->booking->qr_code, 'QRCODE', 8, 8);
+        $qrCodeUrl = Storage::disk('public')->url($this->booking->qr_code);
 
         return (new MailMessage)
             ->subject("Booking Approved: {$this->booking->title}")
@@ -34,7 +34,7 @@ class BookingApproved extends Notification
             ->line("**Date:** {$this->booking->starts_at->format('l, M d, Y')}")
             ->line("**Time:** {$this->booking->starts_at->format('H:i')} - {$this->booking->ends_at->format('H:i')}")
             ->line('Scan the QR code below to check in:')
-            ->line('<img src="data:image/png;base64,' . base64_encode($qrCodePng) . '" alt="QR Code" style="width:200px;height:200px;" />')
+            ->line('<img src="' . $qrCodeUrl . '" alt="QR Code" style="width:200px;height:200px;" />')
             ->action('View Booking', url("/dashboard/bookings/{$this->booking->id}"))
             ->line("This QR code is valid until the end of the meeting day ({$this->booking->ends_at->format('M d, Y')}).");
     }
