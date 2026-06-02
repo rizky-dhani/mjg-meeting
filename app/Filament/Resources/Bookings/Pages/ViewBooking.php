@@ -6,7 +6,7 @@ use App\Filament\Resources\Bookings\BookingResource;
 use App\Models\ApprovalFlow;
 use App\Models\Booking;
 use Filament\Actions\EditAction;
-use Filament\Infolists\Components\Group;
+use Filament\Schemas\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
@@ -71,12 +71,7 @@ class ViewBooking extends ViewRecord
                         ImageEntry::make('qr_code')
                             ->label('Scan to check in')
                             ->size(200)
-                            ->simpleLightbox()
-                            ->url(fn(Booking $record): string =>
-                                'data:image/png;base64,' . base64_encode(
-                                    \Milon\Barcode\Facades\DNS2DFacade::getBarcodePNG($record->qr_code, 'QRCODE', 8, 8)
-                                )
-                            )
+                            ->disk('public')
                             ->extraImgAttributes(['class' => 'mx-auto']),
                     ]),
             ]);
