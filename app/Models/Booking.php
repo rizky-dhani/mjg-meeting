@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\ApprovalFlow;
+use App\Support\Approvals\Evaluation\ApprovalState;
 use App\Support\Approvals\Traits\HasApprovalFlow;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -19,6 +20,7 @@ class Booking extends Model
     protected $fillable = [
         'room_id',
         'user_id',
+        'booker_id',
         'title',
         'description',
         'date',
@@ -69,6 +71,11 @@ class Booking extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function booker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'booker_id');
+    }
+
     public function attendance(): HasMany
     {
         return $this->hasMany(Attendance::class);
@@ -113,5 +120,14 @@ class Booking extends Model
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Booking $booking) {
+            if (! $booking->isPending()) {
+                throw new \Exception('Only bookings with pending status can be deleted.');
+            }
+        });
     }
 }

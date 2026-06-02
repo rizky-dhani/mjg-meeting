@@ -19,6 +19,7 @@ class CreateBooking extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = auth()->id();
+        $data['booker_id'] = auth()->id();
 
         if (! Booking::isAvailable($data['room_id'], $data['date'], $data['starts_at'], $data['ends_at'])) {
             Notification::make()

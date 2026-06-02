@@ -11,19 +11,20 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Demo departments (created first so seeders can reference them)
+        Department::firstOrCreate(['code' => 'IT'], ['name' => 'Information Technology']);
+        Department::firstOrCreate(['code' => 'HR'], ['name' => 'Human Resources']);
+        Department::firstOrCreate(['code' => 'MKT'], ['name' => 'Marketing']);
+
         $this->call([
             RoleSeeder::class,
+            UserSeeder::class,
             ApprovalFlowSeeder::class,
         ]);
 
         // Demo locations
         $headOffice = Location::create(['name' => 'Head Office', 'address' => '123 Main St']);
         $warehouse = Location::create(['name' => 'Warehouse', 'address' => '456 Industrial Ave']);
-
-        // Demo departments
-        Department::firstOrCreate(['code' => 'IT'], ['name' => 'Information Technology']);
-        Department::firstOrCreate(['code' => 'HR'], ['name' => 'Human Resources']);
-        Department::firstOrCreate(['code' => 'MKT'], ['name' => 'Marketing']);
 
         // Demo rooms
         Room::create(['location_id' => $headOffice->id, 'name' => 'Meeting Room A', 'capacity' => 10]);

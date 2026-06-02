@@ -4,6 +4,7 @@ namespace App\Support\Approvals\Evaluation;
 
 use App\Models\ApprovalFlow;
 use App\Models\ApprovalFlowStep;
+use App\Models\User;
 use App\Support\Approvals\Models\Approval;
 use Illuminate\Database\Eloquent\Model;
 
@@ -79,10 +80,37 @@ class ApprovalEvaluator
     }
 
     /**
+     * Determine whether a step should be auto-skipped.
+     * When scope=requester and no user in the requester's department has the
+     * required role, the step cannot be fulfilled — skip it automatically.
+     */
+    protected static function shouldAutoSkipStep(Model $model, ApprovalFlowStep $step): bool
+    {
+        if ($step->scope !== ApprovalFlowStep::SCOPE_REQUESTER) {
+            return false;
+        }
+
+        $requester = $model->user;
+
+        if ($requester === null || $requester->department_id === null) {
+            return true;
+        }
+
+        return ! User::where('department_id', $requester->department_id)
+            ->role($step->role->name)
+            ->exists();
+    }
+
+    /**
      * Check approval records for a specific step.
      */
     protected static function checkStep(Model $model, ApprovalFlow $flow, ApprovalFlowStep $step): ApprovalState
     {
+        // Auto-skip if scope=requester but no eligible approver exists in the requester's department
+        if (static::shouldAutoSkipStep($model, $step)) {
+            return ApprovalState::Approved;
+        }
+
         $approvals = static::getApprovalsForStep($model, $flow, $step);
 
         // If no approval records exist, the step is open
@@ -111,6 +139,11 @@ class ApprovalEvaluator
      */
     protected static function isStepApproved(Model $model, ApprovalFlow $flow, ApprovalFlowStep $step): bool
     {
+        // Auto-skip if scope=requester but no eligible approver exists
+        if (static::shouldAutoSkipStep($model, $step)) {
+            return true;
+        }
+
         $approvals = static::getApprovalsForStep($model, $flow, $step);
 
         $approvedStatuses = ['approved'];

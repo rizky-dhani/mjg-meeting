@@ -29,6 +29,8 @@ class BookingForm
                     ->schema([
                         Hidden::make('user_id')
                             ->default(fn() => auth()->id()),
+                        Hidden::make('booker_id')
+                            ->default(fn() => auth()->id()),
                         TextInput::make('title')
                             ->required()
                             ->maxLength(255),

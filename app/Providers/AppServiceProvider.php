@@ -25,6 +25,31 @@ class AppServiceProvider extends ServiceProvider
             if ($user->hasRole('Super Admin')) {
                 return true;
             }
+
+            if ($user->hasRole('Head')) {
+                if (in_array($ability, [
+                    'view_any_booking',
+                    'view_booking',
+                ])) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            if ($user->hasRole('Admin')) {
+                if (in_array($ability, [
+                    'view_any_booking',
+                    'view_booking',
+                    'create_booking',
+                    'update_booking',
+                    'delete_booking',
+                ])) {
+                    return true;
+                }
+
+                return null;
+            }
         });
 
         Model::preventLazyLoading(! $this->app->isProduction());

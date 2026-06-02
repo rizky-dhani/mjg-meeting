@@ -96,7 +96,7 @@ class BookingsTable
                 ViewAction::make(),
                 EditAction::make()
                     ->visible(fn(Booking $record): bool =>
-                        auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')),
+                        ! auth()->user()->hasRole('Head')),
                 Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
@@ -139,18 +139,30 @@ class BookingsTable
 
         $query->with('approvals');
 
-        if ($user->hasRole('Admin') || $user->hasRole('Super Admin')) {
+        // Super Admin: sees all bookings
+        if ($user->hasRole('Super Admin')) {
             return $query;
         }
 
-        $departmentUserIds = User::where('department_id', $user->department_id)
-            ->pluck('id');
+        // Head: sees department-scoped bookings for approval
+        if ($user->hasRole('Head')) {
+            $departmentUserIds = User::where('department_id', $user->department_id)
+                ->pluck('id');
 
-        return $query->whereIn('user_id', $departmentUserIds);
+            return $query->whereIn('booker_id', $departmentUserIds);
+        }
+
+        // Everyone else (Admin, etc.): only sees their own bookings
+        return $query->where('booker_id', $user->id);
     }
 
     protected static function canApproveStep(Booking $record): bool
     {
+        // Admin: CRUD without Approval
+        if (auth()->user()->hasRole('Admin')) {
+            return false;
+        }
+
         $step = $record->currentActionableStep();
 
         if ($step === null || $step->role === null) {
@@ -163,12 +175,16 @@ class BookingsTable
             return false;
         }
 
-        // If step is scoped to a specific department, verify the user belongs to it
-        if ($step->department !== null && $user->department_id !== $step->department->id) {
-            return false;
-        }
+        return match ($step->scope) {
+            // Specific department: user must belong to that department
+            'department' => $step->department !== null && $user->department_id === $step->department->id,
 
-        return true;
+            // Same as requester: user must be in the requester's department
+            'requester' => $user->department_id === $record->user->department_id,
+
+            // All departments: no additional check needed
+            default => true,
+        };
     }
 
     protected static function processApproval(Booking $record, string $status): void
