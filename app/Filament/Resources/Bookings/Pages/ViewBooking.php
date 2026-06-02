@@ -3,13 +3,14 @@
 namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
-use App\Models\ApprovalFlow;
+use App\Filament\Resources\Bookings\Tables\BookingsTable;
 use App\Models\Booking;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Schemas\Components\Group;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
@@ -24,12 +25,17 @@ class ViewBooking extends ViewRecord
             ->components([
                 Section::make('Meeting Details')
                     ->components([
-                        TextEntry::make('title')
-                            ->weight(FontWeight::Bold)
-                            ->size('lg'),
-                        TextEntry::make('description')
-                            ->markdown()
-                            ->columnSpanFull(),
+                        Group::make()
+                            ->columns(3)
+                            ->components([
+                                TextEntry::make('title')
+                                    ->weight(FontWeight::Bold)
+                                    ->size('lg')
+                                    ->columnSpan(1),
+                                TextEntry::make('description')
+                                    ->markdown()
+                                    ->columnSpan(2),
+                            ]),
                         Group::make()
                             ->columns(3)
                             ->components([
@@ -54,33 +60,24 @@ class ViewBooking extends ViewRecord
                                     ->label('Booked by'),
                             ]),
                     ]),
+
                 Section::make('Approval Status')
-                    ->components([
-                        TextEntry::make('_approval_state')
-                            ->label('Status')
-                            ->badge()
-                            ->state(fn(Booking $record): string => ucfirst($record->approvalState()->value))
-                            ->color(fn(Booking $record): string => match ($record->approvalState()->value) {
-                                'approved' => 'success',
-                                'denied' => 'danger',
-                                'pending' => 'warning',
-                                'open' => 'gray',
-                                default => 'gray',
-                            }),
-                        TextEntry::make('_actionable_step')
-                            ->label('Current Step')
-                            ->state(fn(Booking $record): string => static::getActionableStepLabel($record))
-                            ->visible(fn(Booking $record): bool => ! $record->isApproved() && ! $record->isDenied()),
-                    ]),
-                Section::make('QR Code')
-                    ->visible(fn(Booking $record): bool => $record->isApproved())
-                    ->components([
-                        ImageEntry::make('qr_code')
-                            ->label('Scan to check in')
-                            ->size(200)
-                            ->disk('public')
-                            ->extraImgAttributes(['class' => 'mx-auto']),
-                    ]),
+                    ->components(array_merge(
+                        [
+                            TextEntry::make('_approval_state')
+                                ->label('Status')
+                                ->badge()
+                                ->state(fn(Booking $record): string => ucfirst($record->approvalState()->value))
+                                ->color(fn(Booking $record): string => match ($record->approvalState()->value) {
+                                    'approved' => 'success',
+                                    'denied' => 'danger',
+                                    'pending' => 'warning',
+                                    'open' => 'gray',
+                                    default => 'gray',
+                                }),
+                        ],
+                        $this->getApprovalStepsComponents(),
+                    )),
             ]);
     }
 
@@ -88,17 +85,139 @@ class ViewBooking extends ViewRecord
     {
         return [
             EditAction::make(),
+
+            Action::make('show_qr')
+                ->label('Show QR Code')
+                ->icon('heroicon-o-qr-code')
+                ->color('gray')
+                ->visible(fn (Booking $record): bool => filled($record->qr_code))
+                ->url(fn (Booking $record): string => route('booking.qr', $record->qr_token))
+                ->openUrlInNewTab(),
+
+            Action::make('approve')
+                ->label('Approve')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
+                ->requiresConfirmation()
+                ->action(function (Booking $record): void {
+                    BookingsTable::processApproval($record, 'approved');
+                }),
+
+            Action::make('reject')
+                ->label('Reject')
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
+                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
+                ->requiresConfirmation()
+                ->form([
+                    \Filament\Forms\Components\Textarea::make('reason')
+                        ->label('Reason for rejection')
+                        ->required(),
+                ])
+                ->action(function (Booking $record, array $data): void {
+                    BookingsTable::processApproval($record, 'rejected', $data['reason'] ?? null);
+
+                    $record->user->notify(
+                        new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
+                    );
+                }),
         ];
     }
 
-    protected static function getActionableStepLabel(Booking $record): string
+    protected function getApprovalStepsComponents(): array
     {
-        $step = $record->currentActionableStep();
+        /** @var Booking $record */
+        $record = $this->getRecord();
+        $record->loadMissing('approvals.approver');
+        $flow = $record->approvalFlow();
 
-        if ($step === null || $step->role === null) {
-            return 'Waiting...';
+        if ($flow === null || $flow->steps->isEmpty()) {
+            return [];
         }
 
-        return "Step {$step->step_order}: {$step->role->name} approval required";
+        $components = [];
+
+        foreach ($flow->steps as $step) {
+            $approval = $record->approvals
+                ->where('approval_flow_step_id', $step->id)
+                ->where('key', $flow->name)
+                ->first();
+
+            $isRejected = $approval && in_array($approval->getRawOriginal('status'), ['denied', 'rejected'], true);
+            $isApproved = $approval && $approval->getRawOriginal('status') === 'approved';
+
+            $components[] = TextEntry::make("_step_{$step->id}_header")
+                ->label("Step {$step->step_order}")
+                ->weight(FontWeight::Bold);
+
+            $components[] = Group::make()
+                ->columns(3)
+                ->components([
+                    TextEntry::make("_step_{$step->id}_approver_name")
+                        ->label('Approver')
+                        ->state($approval?->approver?->name ?? $this->getEligibleApproverName($record, $step)),
+                    TextEntry::make("_step_{$step->id}_status")
+                        ->label('Status')
+                        ->badge()
+                        ->state(match (true) {
+                            $isApproved => 'Approved',
+                            $isRejected => 'Rejected',
+                            $approval !== null => ucfirst($approval->status),
+                            default => 'Waiting',
+                        })
+                        ->color(match (true) {
+                            $isApproved => 'success',
+                            $isRejected => 'danger',
+                            default => 'gray',
+                        }),
+                    TextEntry::make("_step_{$step->id}_at")
+                        ->label(
+                            match (true) {
+                                $isRejected => 'Rejected At',
+                                $isApproved => 'Approved At',
+                                default => '',
+                            }
+                        )
+                        ->state($approval !== null ? $approval->created_at->format('d M Y H:i') : '-')
+                        ->hidden(fn () => ! $isApproved && ! $isRejected),
+                ]);
+
+            if ($isRejected) {
+                $components[] = TextEntry::make("_step_{$step->id}_reason")
+                    ->label('Rejection Reason')
+                    ->state($approval->reason ?? 'No reason provided')
+                    ->columnSpanFull();
+            }
+        }
+
+        return $components;
+    }
+
+    protected function getEligibleApproverName(Booking $record, \App\Models\ApprovalFlowStep $step): string
+    {
+        $roleName = $step->role?->name;
+
+        if ($roleName === null) {
+            return 'No approver assigned';
+        }
+
+        $query = User::role($roleName);
+
+        if ($step->scope === 'department' && $step->department_id !== null) {
+            $query->where('department_id', $step->department_id);
+        }
+
+        if ($step->scope === 'requester') {
+            $requesterDeptId = $record->user?->department_id;
+            if ($requesterDeptId === null) {
+                return 'No eligible approver';
+            }
+            $query->where('department_id', $requesterDeptId);
+        }
+
+        $user = $query->first();
+
+        return $user?->name ?? "{$roleName} (no user)";
     }
 }
