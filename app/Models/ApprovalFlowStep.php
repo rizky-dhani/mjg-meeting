@@ -10,6 +10,7 @@ class ApprovalFlowStep extends Model
     protected $fillable = [
         'approval_flow_id',
         'role_id',
+        'department_id',
         'step_order',
     ];
 
@@ -21,5 +22,10 @@ class ApprovalFlowStep extends Model
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 }

@@ -157,7 +157,18 @@ class BookingsTable
             return false;
         }
 
-        return auth()->user()->hasRole($step->role->name);
+        $user = auth()->user();
+
+        if (! $user->hasRole($step->role->name)) {
+            return false;
+        }
+
+        // If step is scoped to a specific department, verify the user belongs to it
+        if ($step->department !== null && $user->department_id !== $step->department->id) {
+            return false;
+        }
+
+        return true;
     }
 
     protected static function processApproval(Booking $record, string $status): void

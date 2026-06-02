@@ -6,6 +6,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\File;
@@ -58,9 +59,18 @@ class ApprovalFlowForm
                             ->reorderable()
                             ->addActionLabel('Add Step')
                             ->defaultItems(0)
+                            ->columns(2)
                             ->schema([
+                                Select::make('department_id')
+                                    ->relationship('department', 'name', fn (Builder $query) => $query->orderBy('name'))
+                                    ->nullable()
+                                    ->searchable()
+                                    ->preload()
+                                    ->label('Department')
+                                    ->helperText('Leave empty to apply to all departments.'),
+
                                 Select::make('role_id')
-                                    ->relationship('role', 'name')
+                                    ->relationship('role', 'name', fn (Builder $query) => $query->orderBy('name'))
                                     ->required()
                                     ->searchable()
                                     ->preload()

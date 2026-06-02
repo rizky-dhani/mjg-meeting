@@ -75,7 +75,7 @@ class ApprovalEvaluator
      */
     public static function findFlow(Model $model): ?ApprovalFlow
     {
-        return ApprovalFlow::where('model_type', $model::class)->with('steps.role')->first();
+        return ApprovalFlow::where('model_type', $model::class)->with('steps.role', 'steps.department')->first();
     }
 
     /**
