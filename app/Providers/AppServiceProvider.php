@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             if ($user->hasRole('Head')) {
+                // Head: can view bookings (for approval listing)
                 if (in_array($ability, [
                     'view_any_booking',
                     'view_booking',
@@ -34,7 +35,17 @@ class AppServiceProvider extends ServiceProvider
                     return true;
                 }
 
-                return false;
+                // Deny booking CRUD
+                if (in_array($ability, [
+                    'create_booking',
+                    'update_booking',
+                    'delete_booking',
+                ])) {
+                    return false;
+                }
+
+                // Everything else (attendance, etc.) — let the policy decide
+                return null;
             }
 
             if ($user->hasRole('Admin')) {
