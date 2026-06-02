@@ -17,6 +17,7 @@ class Approval extends Model
         'approver_id',
         'approver_type',
         'approval_by',
+        'approval_flow_step_id',
         'status',
     ];
 

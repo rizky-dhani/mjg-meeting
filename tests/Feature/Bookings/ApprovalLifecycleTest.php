@@ -25,6 +25,9 @@ beforeEach(function () {
         ['role_id' => $adminRole->id, 'step_order' => 2],
     ]);
 
+    $this->userStep = $flow->steps()->where('step_order', 1)->first();
+    $this->adminStep = $flow->steps()->where('step_order', 2)->first();
+
     $this->admin = User::factory()->create()->assignRole('Admin');
     $this->user = User::factory()->create()->assignRole('User');
     $this->room = Room::factory()->create();
@@ -53,6 +56,7 @@ test('requester can submit approval as pending', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'User',
+        'approval_flow_step_id' => $this->userStep->id,
     ]);
 
     $this->booking->refresh();
@@ -71,6 +75,7 @@ test('admin can fully approve a booking', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'User',
+        'approval_flow_step_id' => $this->userStep->id,
     ]);
 
     // Step 2: Admin approves
@@ -83,6 +88,7 @@ test('admin can fully approve a booking', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'Admin',
+        'approval_flow_step_id' => $this->adminStep->id,
     ]);
 
     $this->booking->refresh();
@@ -100,6 +106,7 @@ test('admin can reject a booking', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'User',
+        'approval_flow_step_id' => $this->userStep->id,
     ]);
 
     // Admin rejects
@@ -112,6 +119,7 @@ test('admin can reject a booking', function () {
         'status' => 'rejected',
         'key' => 'Booking Approval',
         'approval_by' => 'Admin',
+        'approval_flow_step_id' => $this->adminStep->id,
     ]);
 
     $this->booking->refresh();
@@ -141,6 +149,7 @@ test('admin can approve when it is their turn', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'User',
+        'approval_flow_step_id' => $this->userStep->id,
     ]);
 
     $this->booking->refresh();

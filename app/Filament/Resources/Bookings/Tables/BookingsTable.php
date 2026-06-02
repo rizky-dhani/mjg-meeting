@@ -238,6 +238,7 @@ class BookingsTable
             'status' => $status,
             'key' => $flow->name,
             'approval_by' => $step->role->name,
+            'approval_flow_step_id' => $step->id,
         ]);
 
         $record->refresh();

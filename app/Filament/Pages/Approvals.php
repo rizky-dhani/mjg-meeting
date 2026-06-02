@@ -84,17 +84,15 @@ class Approvals extends Page implements HasTable
                         ->get();
 
                     foreach ($prevSteps as $prevStep) {
-                        $sq->whereHas('approvals', function ($aq) use ($flow, $prevStep) {
-                            $aq->where('key', $flow->name)
-                                ->where('approval_by', $prevStep->role->name)
+                        $sq->whereHas('approvals', function ($aq) use ($prevStep) {
+                            $aq->where('approval_flow_step_id', $prevStep->id)
                                 ->where('status', 'approved');
                         });
                     }
 
                     // This step must NOT yet be approved
-                    $sq->whereDoesntHave('approvals', function ($aq) use ($flow, $step) {
-                        $aq->where('key', $flow->name)
-                            ->where('approval_by', $step->role->name)
+                    $sq->whereDoesntHave('approvals', function ($aq) use ($step) {
+                        $aq->where('approval_flow_step_id', $step->id)
                             ->where('status', 'approved');
                     });
 

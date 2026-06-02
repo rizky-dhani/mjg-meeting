@@ -31,17 +31,24 @@ class ViewBooking extends ViewRecord
                             ->markdown()
                             ->columnSpanFull(),
                         Group::make()
-                            ->columns(2)
+                            ->columns(3)
                             ->components([
                                 TextEntry::make('room.name')
                                     ->label('Room'),
                                 TextEntry::make('date')
-                                    ->date(),
+                                    ->label('Date')
+                                    ->state(fn(Booking $record): string => strtoupper($record->date->format('d F Y'))),
                                 TextEntry::make('room.location.name')
                                     ->label('Location'),
+                            ]),
+                        Group::make()
+                            ->columns(3)
+                            ->components([
                                 TextEntry::make('starts_at')
+                                    ->label('Starts At')
                                     ->time(),
                                 TextEntry::make('ends_at')
+                                    ->label('Ends At')
                                     ->time(),
                                 TextEntry::make('user.name')
                                     ->label('Booked by'),

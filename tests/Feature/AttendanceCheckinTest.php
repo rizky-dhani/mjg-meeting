@@ -30,6 +30,9 @@ beforeEach(function () {
         ['role_id' => $adminRole->id, 'step_order' => 2],
     ]);
 
+    $this->userStep = $flow->steps()->where('step_order', 1)->first();
+    $this->adminStep = $flow->steps()->where('step_order', 2)->first();
+
     $this->room = Room::factory()->create();
     $this->user = User::factory()->create()->assignRole('User');
     $this->admin = User::factory()->create()->assignRole('Admin');
@@ -53,6 +56,7 @@ beforeEach(function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'User',
+        'approval_flow_step_id' => $this->userStep->id,
     ]);
 
     // Step 2: Admin approves
@@ -64,6 +68,7 @@ beforeEach(function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'Admin',
+        'approval_flow_step_id' => $this->adminStep->id,
     ]);
 
     $this->booking->refresh();
@@ -124,6 +129,7 @@ it('shows expired for past meeting', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'User',
+        'approval_flow_step_id' => $this->userStep->id,
     ]);
 
     Approval::create([
@@ -134,6 +140,7 @@ it('shows expired for past meeting', function () {
         'status' => 'approved',
         'key' => 'Booking Approval',
         'approval_by' => 'Admin',
+        'approval_flow_step_id' => $this->adminStep->id,
     ]);
 
     actingAs($this->user);

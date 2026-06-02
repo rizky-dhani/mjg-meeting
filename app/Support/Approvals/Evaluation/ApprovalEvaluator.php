@@ -157,6 +157,6 @@ class ApprovalEvaluator
     {
         return $model->approvals
             ->where('key', $flow->name)
-            ->where('approval_by', $step->role?->name ?? "step-{$step->id}");
+            ->where('approval_flow_step_id', $step->id);
     }
 }
