@@ -17,7 +17,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Milon\Barcode\Facades\DNS2DFacade;
 
 class BookingsTable
 {
@@ -226,9 +228,13 @@ class BookingsTable
             $qrToken = (string) Str::uuid();
             $qrCodeUrl = url('/attendance/' . $qrToken);
 
+            $qrPng = DNS2DFacade::getBarcodePNG($qrCodeUrl, 'QRCODE', 8, 8);
+            $qrPath = sprintf('bookings/QR-%s.png', $record->booking_number);
+            Storage::disk('public')->put($qrPath, $qrPng);
+
             $record->update([
                 'qr_token' => $qrToken,
-                'qr_code' => $qrCodeUrl,
+                'qr_code' => $qrPath,
             ]);
 
             $record->attendance()->create([
