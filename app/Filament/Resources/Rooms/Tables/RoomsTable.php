@@ -23,7 +23,7 @@ class RoomsTable
                 TextColumn::make('capacity')
                     ->sortable()
                     ->numeric()
-                    ->formatStateUsing(fn ($state) => $state ?? '∞'),
+                    ->getStateUsing(fn ($record) => $record->capacity ?? '∞'),
                 TextColumn::make('bookings_count')
                     ->counts('bookings')
                     ->label('Total Bookings'),
