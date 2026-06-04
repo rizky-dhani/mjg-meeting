@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\Attendance;
 use App\Models\Booking;
-use Filament\Notifications\Notification;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -20,6 +19,8 @@ class AttendanceCheckin extends Component
     public bool $isExpired = false;
 
     public bool $checkedIn = false;
+
+    public bool $confirming = false;
 
     public bool $loading = true;
 
@@ -57,54 +58,27 @@ class AttendanceCheckin extends Component
             ->where('user_id', auth()->id())
             ->exists();
 
-        if ($this->alreadyCheckedIn) {
-            Notification::make()
-                ->warning()
-                ->title('Already Checked In')
-                ->body('You have already recorded your attendance for this meeting.')
-                ->send();
-        }
-
         $this->loading = false;
     }
 
-    public function rules(): array
+    public function confirmCheckIn(): void
     {
-        return [
-            'qrToken' => ['required', 'string'],
-        ];
+        if ($this->alreadyCheckedIn || $this->isExpired || ! $this->booking) {
+            return;
+        }
+
+        $this->confirming = true;
+    }
+
+    public function cancelCheckIn(): void
+    {
+        $this->confirming = false;
     }
 
     public function checkIn(): void
     {
-        $this->validate();
-
-        if (! $this->booking) {
-            Notification::make()
-                ->danger()
-                ->title('Invalid QR Code')
-                ->body('This QR code is not valid or the booking has been cancelled.')
-                ->send();
-
-            return;
-        }
-
-        if ($this->isExpired) {
-            Notification::make()
-                ->danger()
-                ->title('Meeting Expired')
-                ->body('This meeting has already ended.')
-                ->send();
-
-            return;
-        }
-
-        if ($this->alreadyCheckedIn) {
-            Notification::make()
-                ->warning()
-                ->title('Duplicate Check-In')
-                ->body('You have already checked in for this meeting.')
-                ->send();
+        if (! $this->booking || $this->isExpired || $this->alreadyCheckedIn) {
+            $this->confirming = false;
 
             return;
         }
@@ -116,12 +90,7 @@ class AttendanceCheckin extends Component
         ]);
 
         $this->checkedIn = true;
-
-        Notification::make()
-            ->success()
-            ->title('Attendance Recorded!')
-            ->body('Your check-in has been recorded successfully.')
-            ->send();
+        $this->confirming = false;
     }
 
     public function render()

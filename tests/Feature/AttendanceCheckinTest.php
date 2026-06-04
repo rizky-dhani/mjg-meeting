@@ -87,8 +87,11 @@ it('allows user to check in', function () {
     actingAs($this->user);
 
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->call('confirmCheckIn')
+        ->assertSet('confirming', true)
         ->call('checkIn')
-        ->assertSet('checkedIn', true);
+        ->assertSet('checkedIn', true)
+        ->assertSet('confirming', false);
 
     expect(Attendance::where('booking_id', $this->booking->id)
         ->where('user_id', $this->user->id)

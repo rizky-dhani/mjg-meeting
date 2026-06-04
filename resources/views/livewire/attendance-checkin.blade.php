@@ -47,6 +47,51 @@
                 </div>
             </div>
 
+        @elseif ($confirming)
+            <div class="bg-white shadow rounded-lg p-8">
+                <div class="text-center mb-6">
+                    <div class="text-amber-500 text-5xl mb-4">&#9888;</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Confirm Check-In</h2>
+                    <p class="text-gray-500 mt-2">Please confirm your attendance for this meeting.</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h3 class="font-semibold text-lg text-gray-900">{{ $booking->title }}</h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ $booking->room->name }}
+                        @if($booking->room->location)
+                            &middot; {{ $booking->room->location->name }}
+                        @endif
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ $booking->starts_at->format('l, M d, Y') }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        {{ $booking->starts_at->format('H:i') }} &ndash; {{ $booking->ends_at->format('H:i') }}
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-500 mb-4">
+                        Checking in as <strong>{{ auth()->user()->name }}</strong>
+                    </p>
+                    <div class="flex gap-3">
+                        <button
+                            wire:click="cancelCheckIn"
+                            class="flex-1 bg-white text-gray-700 py-3 px-6 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            wire:click="checkIn"
+                            class="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                        >
+                            Confirm Check-In
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         @else
             <div class="bg-white shadow rounded-lg p-8">
                 <div class="text-center mb-6">
@@ -78,7 +123,7 @@
                         You're checking in as <strong>{{ auth()->user()->name }}</strong>
                     </p>
                     <button
-                        wire:click="checkIn"
+                        wire:click="confirmCheckIn"
                         class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                     >
                         Mark Attendance
