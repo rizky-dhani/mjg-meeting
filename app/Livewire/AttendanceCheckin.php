@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Attendance;
 use App\Models\Booking;
+use Filament\Notifications\Notification;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -56,12 +57,55 @@ class AttendanceCheckin extends Component
             ->where('user_id', auth()->id())
             ->exists();
 
+        if ($this->alreadyCheckedIn) {
+            Notification::make()
+                ->warning()
+                ->title('Already Checked In')
+                ->body('You have already recorded your attendance for this meeting.')
+                ->send();
+        }
+
         $this->loading = false;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'qrToken' => ['required', 'string'],
+        ];
     }
 
     public function checkIn(): void
     {
-        if (! $this->booking || $this->isExpired || $this->alreadyCheckedIn) {
+        $this->validate();
+
+        if (! $this->booking) {
+            Notification::make()
+                ->danger()
+                ->title('Invalid QR Code')
+                ->body('This QR code is not valid or the booking has been cancelled.')
+                ->send();
+
+            return;
+        }
+
+        if ($this->isExpired) {
+            Notification::make()
+                ->danger()
+                ->title('Meeting Expired')
+                ->body('This meeting has already ended.')
+                ->send();
+
+            return;
+        }
+
+        if ($this->alreadyCheckedIn) {
+            Notification::make()
+                ->warning()
+                ->title('Duplicate Check-In')
+                ->body('You have already checked in for this meeting.')
+                ->send();
+
             return;
         }
 
@@ -72,6 +116,12 @@ class AttendanceCheckin extends Component
         ]);
 
         $this->checkedIn = true;
+
+        Notification::make()
+            ->success()
+            ->title('Attendance Recorded!')
+            ->body('Your check-in has been recorded successfully.')
+            ->send();
     }
 
     public function render()

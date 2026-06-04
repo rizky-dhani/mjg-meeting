@@ -115,6 +115,7 @@ it('shows expired for past meeting', function () {
     $pastBooking = Booking::factory()->create([
         'room_id' => $this->room->id,
         'user_id' => $this->user->id,
+        'date' => now()->subDays(2)->format('Y-m-d'),
         'starts_at' => now()->subDays(2),
         'ends_at' => now()->subDays(2)->addHour(),
         'qr_token' => $pastQrToken,
