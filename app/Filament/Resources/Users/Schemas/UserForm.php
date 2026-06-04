@@ -33,7 +33,6 @@ class UserForm
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('employee_number')
-                                    ->required()
                                     ->maxLength(50)
                                     ->unique(ignoreRecord: true),
                                 Select::make('department_id')

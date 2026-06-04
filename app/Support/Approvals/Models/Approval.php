@@ -19,6 +19,7 @@ class Approval extends Model
         'approval_by',
         'approval_flow_step_id',
         'status',
+        'reason',
     ];
 
     public function approver(): MorphTo

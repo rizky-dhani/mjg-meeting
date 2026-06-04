@@ -10,11 +10,12 @@ use App\Models\Booking;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Notifications\Notification;
-use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -146,6 +147,8 @@ class Approvals extends Page implements HasTable
     protected function getTableActions(): array
     {
         return [
+            ViewAction::make()
+                ->url(fn (Booking $record): string => BookingResource::getUrl('view', ['record' => $record])),
             Action::make('approve')
                 ->label('Approve')
                 ->icon('heroicon-o-check-circle')
@@ -167,15 +170,19 @@ class Approvals extends Page implements HasTable
                         ->required(),
                 ])
                 ->action(function (Booking $record, array $data) {
-                    BookingsTable::processApproval($record, 'rejected');
+                    BookingsTable::processApproval($record, 'rejected', $data['reason'] ?? null);
 
                     $record->user->notify(
                         new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
                     );
                 }),
-            ViewAction::make()
-                ->url(fn (Booking $record): string => BookingResource::getUrl('view', ['record' => $record])),
         ];
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->recordUrl(fn (Booking $record): string => BookingResource::getUrl('view', ['record' => $record]));
     }
 
     protected function getDefaultTableSortColumn(): ?string

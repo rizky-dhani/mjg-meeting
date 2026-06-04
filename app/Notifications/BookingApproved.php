@@ -6,7 +6,6 @@ use App\Models\Booking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Storage;
 
 class BookingApproved extends Notification
 {
@@ -23,7 +22,7 @@ class BookingApproved extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $qrCodeUrl = Storage::disk('public')->url($this->booking->qr_code);
+        $qrCodeUrl = asset('storage/' . $this->booking->qr_code);
 
         return (new MailMessage)
             ->subject("Booking Approved: {$this->booking->title}")

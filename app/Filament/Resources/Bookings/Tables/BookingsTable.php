@@ -124,7 +124,7 @@ class BookingsTable
                             ->required(),
                     ])
                     ->action(function (Booking $record, array $data) {
-                        static::processApproval($record, 'rejected');
+                        static::processApproval($record, 'rejected', $data['reason'] ?? null);
 
                         $record->user->notify(
                             new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
@@ -211,7 +211,7 @@ class BookingsTable
         };
     }
 
-    public static function processApproval(Booking $record, string $status): void
+    public static function processApproval(Booking $record, string $status, ?string $reason = null): void
     {
         $step = $record->currentActionableStep();
 
@@ -239,6 +239,7 @@ class BookingsTable
             'key' => $flow->name,
             'approval_by' => $step->role->name,
             'approval_flow_step_id' => $step->id,
+            'reason' => $reason,
         ]);
 
         $record->refresh();
@@ -249,7 +250,7 @@ class BookingsTable
 
             $qrPng = DNS2DFacade::getBarcodePNG($qrCodeUrl, 'QRCODE', 8, 8);
             $qrPath = sprintf('bookings/QR-%s.png', $record->booking_number);
-            Storage::disk('public')->put($qrPath, $qrPng);
+            Storage::disk('public')->put($qrPath, base64_decode($qrPng));
 
             $record->update([
                 'qr_token' => $qrToken,
