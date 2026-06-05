@@ -20,14 +20,20 @@
             <div class="bg-white shadow rounded-lg p-8 text-center">
                 <div class="text-yellow-500 text-5xl mb-4">&#9203;</div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">QR Code Expired</h2>
-                <p class="text-gray-500">This QR code expired at the end of the meeting day ({{ $booking->ends_at->format('M d, Y') }}).</p>
+                <p class="text-gray-500">This QR code expired at the end of the meeting day.</p>
             </div>
 
         @elseif ($alreadyCheckedIn)
             <div class="bg-white shadow rounded-lg p-8 text-center">
                 <div class="text-green-500 text-5xl mb-4">&#10003;</div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Already Checked In</h2>
-                <p class="text-gray-500">You've already recorded your attendance for this meeting.</p>
+                <p class="text-gray-500">
+                    @if ($isGuest)
+                        <strong>{{ $guestName }}</strong> has already recorded attendance for this meeting.
+                    @else
+                        You've already recorded your attendance for this meeting.
+                    @endif
+                </p>
                 <div class="mt-6 bg-gray-50 rounded-lg p-4 text-left">
                     <h3 class="font-semibold text-gray-900">{{ $booking->title }}</h3>
                     <p class="text-sm text-gray-500 mt-1">{{ $booking->room->name }} &middot; {{ $booking->room->location?->name }}</p>
@@ -39,7 +45,13 @@
             <div class="bg-white shadow rounded-lg p-8 text-center">
                 <div class="text-green-500 text-5xl mb-4">&#10003;</div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Attendance Recorded!</h2>
-                <p class="text-gray-500">Your check-in has been recorded successfully.</p>
+                <p class="text-gray-500">
+                    @if ($isGuest)
+                        Check-in for <strong>{{ $guestName }}</strong> has been recorded successfully.
+                    @else
+                        Your check-in has been recorded successfully.
+                    @endif
+                </p>
                 <div class="mt-6 bg-gray-50 rounded-lg p-4 text-left">
                     <h3 class="font-semibold text-gray-900">{{ $booking->title }}</h3>
                     <p class="text-sm text-gray-500 mt-1">{{ $booking->room->name }} &middot; {{ $booking->room->location?->name }}</p>
@@ -92,7 +104,78 @@
                 </div>
             </div>
 
+        @elseif ($isGuest)
+            {{-- Guest check-in form --}}
+            <div class="bg-white shadow rounded-lg p-8">
+                <div class="text-center mb-6">
+                    <div class="text-indigo-500 text-5xl mb-4">&#128197;</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Guest Check-In</h2>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h3 class="font-semibold text-lg text-gray-900">{{ $booking->title }}</h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ $booking->room->name }}
+                        @if($booking->room->location)
+                            &middot; {{ $booking->room->location->name }}
+                        @endif
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ $booking->starts_at->format('l, M d, Y') }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        {{ $booking->starts_at->format('H:i') }} &ndash; {{ $booking->ends_at->format('H:i') }}
+                    </p>
+                </div>
+
+                <form wire:submit="checkIn" class="space-y-4">
+                    <p class="text-sm text-gray-600">Enter your details to check in as a guest:</p>
+
+                    <div>
+                        <label for="guestName" class="block text-sm font-medium text-gray-700">Name <span class="text-red-500">*</span></label>
+                        <input
+                            wire:model="guestName"
+                            id="guestName"
+                            type="text"
+                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="Your full name"
+                        >
+                        @error('guestName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label for="guestFrom" class="block text-sm font-medium text-gray-700">From</label>
+                        <input
+                            wire:model="guestFrom"
+                            id="guestFrom"
+                            type="text"
+                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="e.g., Acme Corp"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="guestDesignation" class="block text-sm font-medium text-gray-700">Designation</label>
+                        <input
+                            wire:model="guestDesignation"
+                            id="guestDesignation"
+                            type="text"
+                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="e.g., Vendor PIC"
+                        >
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                    >
+                        Check In as Guest
+                    </button>
+                </form>
+            </div>
+
         @else
+            {{-- Authenticated user check-in --}}
             <div class="bg-white shadow rounded-lg p-8">
                 <div class="text-center mb-6">
                     <div class="text-indigo-500 text-5xl mb-4">&#128197;</div>
