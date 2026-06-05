@@ -16,6 +16,9 @@ class Attendance extends Model
     protected $fillable = [
         'booking_id',
         'user_id',
+        'guest_name',
+        'guest_from',
+        'guest_designation',
         'checked_in_at',
     ];
 
@@ -34,5 +37,20 @@ class Attendance extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getAttendeeTypeAttribute(): string
+    {
+        return $this->user_id ? 'staff' : 'guest';
+    }
+
+    public function scopeGuests($query)
+    {
+        return $query->whereNull('user_id');
+    }
+
+    public function scopeStaff($query)
+    {
+        return $query->whereNotNull('user_id');
     }
 }
