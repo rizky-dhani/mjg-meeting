@@ -166,3 +166,64 @@ it('requires authentication', function () {
     $this->get(route('attendance.checkin', ['qrToken' => $this->booking->qr_token]))
         ->assertRedirect();
 });
+
+it('allows unauthenticated guest to check in via QR', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSet('isGuest', true)
+        ->assertSee('Guest Check-In')
+        ->set('guestName', 'John External')
+        ->set('guestFrom', 'Acme Corp')
+        ->set('guestDesignation', 'Vendor PIC')
+        ->call('checkIn')
+        ->assertSet('checkedIn', true);
+
+    $attendance = Attendance::where('booking_id', $this->booking->id)
+        ->whereNull('user_id')
+        ->where('guest_name', 'John External')
+        ->first();
+
+    expect($attendance)->not->toBeNull();
+    expect($attendance->guest_from)->toBe('Acme Corp');
+    expect($attendance->guest_designation)->toBe('Vendor PIC');
+});
+
+it('prevents duplicate guest check-in with same name', function () {
+    Attendance::create([
+        'booking_id' => $this->booking->id,
+        'user_id' => null,
+        'guest_name' => 'John External',
+        'guest_from' => 'Acme Corp',
+        'guest_designation' => 'Vendor PIC',
+        'checked_in_at' => now(),
+    ]);
+
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSet('isGuest', true)
+        ->assertSee('Guest Check-In')
+        ->set('guestName', 'John External')
+        ->set('guestFrom', 'Acme Corp')
+        ->set('guestDesignation', 'Vendor PIC')
+        ->call('checkIn')
+        ->assertSet('alreadyCheckedIn', true)
+        ->assertSee('Already Checked In');
+});
+
+it('requires guest name when checking in', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSet('isGuest', true)
+        ->call('checkIn')
+        ->assertHasErrors('guestName');
+});
+
+it('allows guest check-in with only name (from and designation optional)', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSet('isGuest', true)
+        ->set('guestName', 'Minimal Guest')
+        ->call('checkIn')
+        ->assertSet('checkedIn', true);
+
+    expect(Attendance::where('booking_id', $this->booking->id)
+        ->where('guest_name', 'Minimal Guest')
+        ->exists()
+    )->toBeTrue();
+});
