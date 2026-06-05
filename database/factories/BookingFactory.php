@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\ApprovalFlow;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
@@ -27,5 +28,26 @@ class BookingFactory extends Factory
             'starts_at' => $startsAt->format('H:i:s'),
             'ends_at' => $endsAt->format('H:i:s'),
         ];
+    }
+
+    public function approved(): static
+    {
+        return $this->afterCreating(function (Booking $booking) {
+            $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+
+            if ($flow === null || ! $flow->steps()->exists()) {
+                return;
+            }
+
+            foreach ($flow->steps as $step) {
+                $booking->approvals()->create([
+                    'key' => $flow->name,
+                    'approval_flow_step_id' => $step->id,
+                    'status' => 'approved',
+                    'approver_id' => User::factory(),
+                    'approver_type' => User::class,
+                ]);
+            }
+        });
     }
 }
