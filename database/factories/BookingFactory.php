@@ -33,9 +33,11 @@ class BookingFactory extends Factory
     public function approved(): static
     {
         return $this->afterCreating(function (Booking $booking) {
-            $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+            $flow = ApprovalFlow::where('model_type', Booking::class)
+                ->with('steps')
+                ->first();
 
-            if ($flow === null || ! $flow->steps()->exists()) {
+            if ($flow === null || $flow->steps->isEmpty()) {
                 return;
             }
 
