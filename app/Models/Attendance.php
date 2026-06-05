@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,17 +41,19 @@ class Attendance extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getAttendeeTypeAttribute(): string
+    protected function attendeeType(): Attribute
     {
-        return $this->user_id ? 'staff' : 'guest';
+        return Attribute::make(
+            get: fn () => $this->user_id ? 'staff' : 'guest',
+        );
     }
 
-    public function scopeGuests($query)
+    public function scopeGuests(Builder $query): Builder
     {
         return $query->whereNull('user_id');
     }
 
-    public function scopeStaff($query)
+    public function scopeStaff(Builder $query): Builder
     {
         return $query->whereNotNull('user_id');
     }
