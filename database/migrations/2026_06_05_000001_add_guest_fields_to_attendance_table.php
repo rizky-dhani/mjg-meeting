@@ -18,7 +18,7 @@ return new class extends Migration
         });
 
         Schema::table('attendance', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->change();
+            $table->unsignedBigInteger('user_id')->nullable()->change();
 
             $table->string('guest_name')->nullable()->after('user_id');
             $table->string('guest_from')->nullable()->after('guest_name');
@@ -39,7 +39,7 @@ return new class extends Migration
             $table->dropForeign(['booking_id']);
             $table->dropUnique(['booking_id', 'user_id']);
             $table->dropColumn(['guest_name', 'guest_from', 'guest_designation']);
-            $table->foreignId('user_id')->nullable(false)->change();
+            $table->unsignedBigInteger('user_id')->nullable(false)->change();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->foreign('booking_id')->references('id')->on('bookings')->cascadeOnDelete();
             $table->unique(['booking_id', 'user_id']);
