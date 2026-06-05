@@ -162,9 +162,9 @@ it('shows invalid for non-existent token', function () {
         ->assertSee('Invalid QR Code');
 });
 
-it('requires authentication', function () {
+it('loads page for unauthenticated guest users', function () {
     $this->get(route('attendance.checkin', ['qrToken' => $this->booking->qr_token]))
-        ->assertRedirect();
+        ->assertOk();
 });
 
 it('allows unauthenticated guest to check in via QR', function () {
