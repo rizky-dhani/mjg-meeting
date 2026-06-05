@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bookings\RelationManagers;
 
-use App\Filament\Resources\Attendances\AttendanceResource;
+use App\Models\Attendance;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -18,13 +18,26 @@ class AttendanceRelationManager extends RelationManager
         return $table
             ->modifyQueryUsing(fn ($query) => $query->with('user'))
             ->columns([
-                TextColumn::make('user.name')
+                TextColumn::make('attendee_name')
                     ->label('Attendee')
-                    ->searchable()
+                    ->state(fn (Attendance $record): string =>
+                        $record->user?->name ?? $record->guest_name ?? 'N/A'
+                    )
+                    ->searchable(query: fn ($query, $search) =>
+                        $query->where('guest_name', 'like', "%{$search}%")
+                            ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    )
                     ->sortable(),
-                TextColumn::make('user.initials')
-                    ->label('Initials')
-                    ->sortable(),
+                TextColumn::make('guest_from')
+                    ->label('From')
+                    ->state(fn (Attendance $record): ?string =>
+                        $record->user_id ? '—' : $record->guest_from
+                    ),
+                TextColumn::make('guest_designation')
+                    ->label('Designation')
+                    ->state(fn (Attendance $record): ?string =>
+                        $record->user_id ? '—' : $record->guest_designation
+                    ),
                 TextColumn::make('checked_in_at')
                     ->label('Checked In At')
                     ->dateTime('d F Y H:i')
