@@ -15,7 +15,7 @@
         </div>
 
         <x-filament::button
-            :href="$getCreateBookingUrl()"
+            :href="$this->getCreateBookingUrl()"
             tag="a"
             icon="heroicon-m-plus-circle"
             color="primary"
@@ -25,7 +25,7 @@
         </x-filament::button>
 
         <x-filament::link
-            :href="$getViewAllUrl()"
+            :href="$this->getViewAllUrl()"
             color="primary"
             class="text-sm"
         >
