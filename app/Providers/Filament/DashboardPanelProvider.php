@@ -16,6 +16,7 @@ use App\Filament\Widgets\BookingDivisionStats;
 use App\Filament\Widgets\DivisionBookingsTable;
 use App\Filament\Widgets\QuickActionsWidget;
 use App\Filament\Widgets\QuickBookingWidget;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -34,10 +35,13 @@ class DashboardPanelProvider extends PanelProvider
             ->path('dashboard')
             ->login()
             ->maxContentWidth(Width::Full)
-            ->viteTheme('resources/css/app.css')
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn (): string => vite(['resources/css/app.css']),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
