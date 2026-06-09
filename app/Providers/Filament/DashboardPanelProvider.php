@@ -15,6 +15,7 @@ use Filament\Support\Enums\Width;
 use App\Filament\Widgets\BookingDivisionStats;
 use App\Filament\Widgets\DivisionBookingsTable;
 use App\Filament\Widgets\QuickActionsWidget;
+use App\Filament\Widgets\QuickBookingWidget;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -46,6 +47,7 @@ class DashboardPanelProvider extends PanelProvider
                 AccountWidget::class,
                 BookingDivisionStats::class,
                 QuickActionsWidget::class,
+                QuickBookingWidget::class,
                 DivisionBookingsTable::class,
             ])
             ->middleware([
