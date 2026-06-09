@@ -18,6 +18,8 @@ use App\Filament\Widgets\QuickActionsWidget;
 use App\Filament\Widgets\QuickBookingWidget;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Foundation\Vite;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -40,7 +42,7 @@ class DashboardPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_START,
-                fn (): string => (string) \vite(['resources/css/app.css']),
+                fn (): Htmlable => app(Vite::class)(['resources/css/app.css']),
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
