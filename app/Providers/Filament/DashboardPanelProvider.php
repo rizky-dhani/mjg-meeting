@@ -34,6 +34,7 @@ class DashboardPanelProvider extends PanelProvider
             ->path('dashboard')
             ->login()
             ->maxContentWidth(Width::Full)
+            ->viteTheme('resources/css/app.css')
             ->colors([
                 'primary' => Color::Amber,
             ])
