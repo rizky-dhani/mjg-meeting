@@ -8,6 +8,7 @@
             <x-filament::button
                 tag="a"
                 :href="$this->getCreateBookingUrl()"
+                color="success"
                 icon="heroicon-m-plus-circle"
                 class="w-full justify-center"
             >
