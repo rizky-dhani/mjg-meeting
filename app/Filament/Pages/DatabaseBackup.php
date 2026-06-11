@@ -35,6 +35,11 @@ class DatabaseBackup extends Page implements HasTable
 
     protected static string | UnitEnum | null $navigationGroup = 'System Management';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole('Super Admin') ?? false;
+    }
+
     public function table(Table $table): Table
     {
         return $table
