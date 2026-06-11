@@ -72,7 +72,7 @@ class BookingsList extends BaseWidget
 
     protected function getDefaultTableSortColumn(): ?string
     {
-        return 'date';
+        return 'booking_number';
     }
 
     protected function getDefaultTableSortDirection(): ?string
