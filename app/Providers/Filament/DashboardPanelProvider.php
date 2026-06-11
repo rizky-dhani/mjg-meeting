@@ -13,11 +13,9 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
 use App\Filament\Widgets\BookingDivisionStats;
-use App\Filament\Widgets\DivisionBookingsTable;
+use App\Filament\Widgets\BookingsList;
 use App\Filament\Widgets\QuickActionsWidget;
-use App\Filament\Widgets\QuickBookingWidget;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Foundation\Vite;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -51,11 +49,9 @@ class DashboardPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
                 BookingDivisionStats::class,
+                BookingsList::class,
                 QuickActionsWidget::class,
-                QuickBookingWidget::class,
-                DivisionBookingsTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,

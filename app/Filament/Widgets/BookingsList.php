@@ -10,8 +10,9 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 
-class DivisionBookingsTable extends BaseWidget
+class BookingsList extends BaseWidget
 {
+    protected static ?int $sort = 3;
     protected int | string | array $columnSpan = 'full';
 
     protected function getTableQuery(): Builder

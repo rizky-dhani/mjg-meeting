@@ -9,6 +9,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class BookingDivisionStats extends BaseWidget
 {
+    protected static ?int $sort = 2;
     protected function getStats(): array
     {
         $user = auth()->user();
