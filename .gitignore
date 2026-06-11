@@ -30,3 +30,5 @@ Thumbs.db
 .tmp/
 boost.json
 opencode.json
+/debug/
+/docs/
