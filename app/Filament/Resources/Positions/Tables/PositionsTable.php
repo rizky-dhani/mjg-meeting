@@ -33,7 +33,8 @@ class PositionsTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->modal(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

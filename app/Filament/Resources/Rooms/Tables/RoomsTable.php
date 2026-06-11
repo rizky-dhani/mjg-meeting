@@ -36,7 +36,8 @@ class RoomsTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->modal(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
