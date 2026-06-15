@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\Bookings\BookingResource;
 use App\Models\Booking;
 use App\Models\User;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -37,6 +38,10 @@ class BookingsList extends BaseWidget
                 ->label('Booking #')
                 ->searchable()
                 ->sortable(),
+            TextColumn::make('title')
+                ->searchable()
+                ->sortable()
+                ->limit(30),
             TextColumn::make('date')
                 ->sortable()
                 ->state(fn (Booking $record): string => strtoupper($record->date->format('d F Y'))),
@@ -44,10 +49,6 @@ class BookingsList extends BaseWidget
                 ->label('Time')
                 ->state(fn (Booking $record): string => $record->starts_at->format('H:i') . ' - ' . $record->ends_at->format('H:i'))
                 ->sortable(['starts_at', 'ends_at']),
-            TextColumn::make('title')
-                ->searchable()
-                ->sortable()
-                ->limit(30),
             TextColumn::make('room.name')
                 ->sortable()
                 ->searchable(),
@@ -83,5 +84,12 @@ class BookingsList extends BaseWidget
     protected function getTableRecordUrlUsing(): ?callable
     {
         return fn (Booking $record): string => BookingResource::getUrl('view', ['record' => $record]);
+    }
+
+    protected function getTableActions(): array
+    {
+        return [
+            ViewAction::make(),
+        ];
     }
 }
