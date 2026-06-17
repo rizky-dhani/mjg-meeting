@@ -15,37 +15,46 @@ class UserForm
         return $schema
             ->components([
                 Section::make('Account Information')
+                    ->columnSpanFull()
                     ->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('email')
-                            ->required()
-                            ->email()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('email')
+                                    ->required()
+                                    ->email()
+                                    ->maxLength(255)
+                                    ->unique(ignoreRecord: true),
+                            ]),
                     ]),
                 Section::make('Employee Details')
+                    ->columnSpanFull()
                     ->schema([
-                        TextInput::make('employee_number')
-                            ->maxLength(50)
-                            ->unique(ignoreRecord: true),
-                        Select::make('department_id')
-                            ->relationship('department', 'name')
-                            ->required()
-                            ->searchable()
-                            ->preload(),
-                        TextInput::make('position')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('initials')
-                            ->required()
-                            ->maxLength(10),
-                        TextInput::make('phone')
-                            ->maxLength(50)
-                            ->tel(),
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('employee_number')
+                                    ->maxLength(50)
+                                    ->unique(ignoreRecord: true),
+                                Select::make('department_id')
+                                    ->relationship('department', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload(),
+                                TextInput::make('position')
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('initials')
+                                    ->required()
+                                    ->maxLength(10),
+                                TextInput::make('phone')
+                                    ->maxLength(50)
+                                    ->tel(),
+                            ]),
                     ]),
                 Section::make('Roles & Permissions')
+                    ->columnSpanFull()
                     ->schema([
                         Select::make('roles')
                             ->relationship('roles', 'name')
