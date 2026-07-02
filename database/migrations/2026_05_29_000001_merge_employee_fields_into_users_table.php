@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Legacy migration — only run if the old schema is present
+        if (! Schema::hasColumn('users', 'name')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
             $table->string('employee_number', 50)->unique()->after('email');
             $table->foreignId('department_id')->constrained()->after('employee_number');
@@ -23,6 +28,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasColumn('users', 'name')) {
+            return;
+        }
+
         // Re-create employees table
         Schema::create('employees', function (Blueprint $table) {
             $table->id();

@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Legacy — only creates on old-schema installs
+        if (! Schema::hasTable('users') || Schema::hasColumn('users', 'user_id')) {
+            return;
+        }
+
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();

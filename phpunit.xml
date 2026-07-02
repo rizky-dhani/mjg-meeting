@@ -32,5 +32,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="MEDQUEST_USERS_DRIVER" value="sqlite"/>
+        <env name="MEDQUEST_USERS_DATABASE" value=":memory:"/>
     </php>
 </phpunit>
