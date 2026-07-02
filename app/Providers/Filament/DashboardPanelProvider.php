@@ -12,6 +12,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
+use App\Filament\Widgets\BookingCalendar;
 use App\Filament\Widgets\BookingDivisionStats;
 use App\Filament\Widgets\BookingsList;
 use App\Filament\Widgets\QuickActionsWidget;
@@ -51,6 +52,7 @@ class DashboardPanelProvider extends PanelProvider
             ->widgets([
                 BookingDivisionStats::class,
                 BookingsList::class,
+                BookingCalendar::class,
                 QuickActionsWidget::class,
             ])
             ->middleware([
