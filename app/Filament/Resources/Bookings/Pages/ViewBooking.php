@@ -94,34 +94,8 @@ class ViewBooking extends ViewRecord
                 ->url(fn (Booking $record): string => route('booking.qr', $record->qr_token))
                 ->openUrlInNewTab(),
 
-            Action::make('approve')
-                ->label('Approve')
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
-                ->requiresConfirmation()
-                ->action(function (Booking $record): void {
-                    BookingsTable::processApproval($record, 'approved');
-                }),
-
-            Action::make('reject')
-                ->label('Reject')
-                ->icon('heroicon-o-x-circle')
-                ->color('danger')
-                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
-                ->requiresConfirmation()
-                ->form([
-                    \Filament\Forms\Components\Textarea::make('reason')
-                        ->label('Reason for rejection')
-                        ->required(),
-                ])
-                ->action(function (Booking $record, array $data): void {
-                    BookingsTable::processApproval($record, 'rejected', $data['reason'] ?? null);
-
-                    $record->user->notify(
-                        new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
-                    );
-                }),
+            BookingsTable::getApproveAction(),
+            BookingsTable::getRejectAction(),
         ];
     }
 

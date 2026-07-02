@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\ApprovalFlow;
 use App\Models\Booking;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -25,24 +26,46 @@ class BookingDivisionStats extends BaseWidget
         $departmentUserIds = User::where('department_id', $user->department_id)
             ->pluck('id');
 
-        $bookings = Booking::whereIn('user_id', $departmentUserIds)
-            ->with('approvals')
-            ->get();
+        $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+        $flowName = $flow?->name ?? 'booking_approval';
+
+        $baseQuery = Booking::whereIn('user_id', $departmentUserIds);
+
+        $total = (clone $baseQuery)->count();
+
+        $approved = (clone $baseQuery)
+            ->whereHas('approvals', fn ($q) => $q
+                ->where('key', $flowName)
+                ->where('status', 'approved'))
+            ->count();
+
+        $denied = (clone $baseQuery)
+            ->whereHas('approvals', fn ($q) => $q
+                ->where('key', $flowName)
+                ->whereIn('status', ['rejected', 'denied']))
+            ->count();
+
+        $open = (clone $baseQuery)
+            ->whereDoesntHave('approvals', fn ($q) => $q
+                ->where('key', $flowName))
+            ->count();
+
+        $pending = $total - $approved - $denied - $open;
 
         return [
-            Stat::make('Total', $bookings->count())
+            Stat::make('Total', $total)
                 ->description('All bookings in your division')
                 ->color('info'),
-            Stat::make('Approved', $bookings->filter(fn (Booking $b): bool => $b->isApproved())->count())
+            Stat::make('Approved', $approved)
                 ->description('Approved bookings')
                 ->color('success'),
-            Stat::make('Pending', $bookings->filter(fn (Booking $b): bool => $b->isPending())->count())
+            Stat::make('Pending', $pending)
                 ->description('Awaiting approval')
                 ->color('warning'),
-            Stat::make('Open', $bookings->filter(fn (Booking $b): bool => $b->isOpen())->count())
+            Stat::make('Open', $open)
                 ->description('Not yet submitted')
                 ->color('gray'),
-            Stat::make('Denied', $bookings->filter(fn (Booking $b): bool => $b->isDenied())->count())
+            Stat::make('Denied', $denied)
                 ->description('Rejected bookings')
                 ->color('danger'),
         ];

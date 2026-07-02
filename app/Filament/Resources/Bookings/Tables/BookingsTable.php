@@ -12,7 +12,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
-use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -103,33 +102,8 @@ class BookingsTable
                 EditAction::make()
                     ->visible(fn(Booking $record): bool =>
                         ! auth()->user()->hasRole('Head')),
-                Action::make('approve')
-                    ->label('Approve')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn(Booking $record): bool => static::canApproveStep($record))
-                    ->requiresConfirmation()
-                    ->action(function (Booking $record) {
-                        static::processApproval($record, 'approved');
-                    }),
-                Action::make('reject')
-                    ->label('Reject')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->visible(fn(Booking $record): bool => static::canApproveStep($record))
-                    ->requiresConfirmation()
-                    ->form([
-                        \Filament\Forms\Components\Textarea::make('reason')
-                            ->label('Reason for rejection')
-                            ->required(),
-                    ])
-                    ->action(function (Booking $record, array $data) {
-                        static::processApproval($record, 'rejected', $data['reason'] ?? null);
-
-                        $record->user->notify(
-                            new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
-                        );
-                    }),
+                static::getApproveAction(),
+                static::getRejectAction(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -211,63 +185,45 @@ class BookingsTable
         };
     }
 
+    public static function getApproveAction(): \Filament\Actions\Action
+    {
+        return \Filament\Actions\Action::make('approve')
+            ->label('Approve')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->visible(fn (Booking $record): bool => static::canApproveStep($record))
+            ->requiresConfirmation()
+            ->action(function (Booking $record) {
+                app(\App\Services\BookingApprovalService::class)->approve($record);
+            });
+    }
+
+    public static function getRejectAction(): \Filament\Actions\Action
+    {
+        return \Filament\Actions\Action::make('reject')
+            ->label('Reject')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->visible(fn (Booking $record): bool => static::canApproveStep($record))
+            ->requiresConfirmation()
+            ->form([
+                \Filament\Forms\Components\Textarea::make('reason')
+                    ->label('Reason for rejection')
+                    ->required(),
+            ])
+            ->action(function (Booking $record, array $data) {
+                app(\App\Services\BookingApprovalService::class)->reject($record, $data['reason'] ?? null);
+            });
+    }
+
     public static function processApproval(Booking $record, string $status, ?string $reason = null): void
     {
-        $step = $record->currentActionableStep();
+        $service = app(\App\Services\BookingApprovalService::class);
 
-        if ($step === null || $step->role === null) {
-            Notification::make()
-                ->title('No pending steps to approve')
-                ->warning()
-                ->send();
-
-            return;
+        if ($status === 'approved') {
+            $service->approve($record, $reason);
+        } else {
+            $service->reject($record, $reason);
         }
-
-        $flow = $record->approvalFlow();
-
-        if ($flow === null) {
-            return;
-        }
-
-        Approval::create([
-            'approver_id' => auth()->id(),
-            'approver_type' => \App\Models\User::class,
-            'approvable_id' => $record->id,
-            'approvable_type' => Booking::class,
-            'status' => $status,
-            'key' => $flow->name,
-            'approval_by' => $step->role->name,
-            'approval_flow_step_id' => $step->id,
-            'reason' => $reason,
-        ]);
-
-        $record->refresh();
-
-        if ($status === 'approved' && $record->isApproved()) {
-            $qrToken = (string) Str::uuid();
-            $qrCodeUrl = url('/attendance/' . $qrToken);
-
-            $qrPng = DNS2DFacade::getBarcodePNG($qrCodeUrl, 'QRCODE', 8, 8);
-            $qrPath = sprintf('bookings/QR-%s.png', $record->booking_number);
-            Storage::disk('public')->put($qrPath, base64_decode($qrPng));
-
-            $record->update([
-                'qr_token' => $qrToken,
-                'qr_code' => $qrPath,
-            ]);
-
-            $record->attendance()->create([
-                'user_id' => $record->user_id,
-                'checked_in_at' => now(),
-            ]);
-
-            $record->user->notify(new \App\Notifications\BookingApproved($record));
-        }
-
-        Notification::make()
-            ->title($status === 'approved' ? 'Booking approved successfully' : 'Booking rejected')
-            ->{$status === 'approved' ? 'success' : 'warning'}()
-            ->send();
     }
 }

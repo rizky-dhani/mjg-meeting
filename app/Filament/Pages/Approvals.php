@@ -11,7 +11,6 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -149,33 +148,8 @@ class Approvals extends Page implements HasTable
         return [
             ViewAction::make()
                 ->url(fn (Booking $record): string => BookingResource::getUrl('view', ['record' => $record])),
-            Action::make('approve')
-                ->label('Approve')
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
-                ->requiresConfirmation()
-                ->action(function (Booking $record) {
-                    BookingsTable::processApproval($record, 'approved');
-                }),
-            Action::make('reject')
-                ->label('Reject')
-                ->icon('heroicon-o-x-circle')
-                ->color('danger')
-                ->visible(fn (Booking $record): bool => BookingsTable::canApproveStep($record))
-                ->requiresConfirmation()
-                ->form([
-                    \Filament\Forms\Components\Textarea::make('reason')
-                        ->label('Reason for rejection')
-                        ->required(),
-                ])
-                ->action(function (Booking $record, array $data) {
-                    BookingsTable::processApproval($record, 'rejected', $data['reason'] ?? null);
-
-                    $record->user->notify(
-                        new \App\Notifications\BookingRejected($record, $data['reason'] ?? null)
-                    );
-                }),
+            BookingsTable::getApproveAction(),
+            BookingsTable::getRejectAction(),
         ];
     }
 
