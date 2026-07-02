@@ -139,7 +139,18 @@ class Booking extends Model
     {
         static::created(function (Booking $booking) {
             $booking->booking_number = sprintf('MJG-BK-%s-%06d', $booking->date->format('Y'), $booking->id);
-            $booking->save();
+            $booking->updateQuietly();
+
+            $booking->user?->notify(new \App\Notifications\BookingSubmitted($booking));
+
+            $firstStep = $booking->currentActionableStep();
+            if ($firstStep !== null) {
+                $approvers = \App\Support\Approvals\Evaluation\ApprovalEvaluator::getEligibleApprovers($booking, $firstStep);
+                \Illuminate\Support\Facades\Notification::send(
+                    $approvers,
+                    new \App\Notifications\BookingNeedsApproval($booking)
+                );
+            }
         });
 
         static::deleting(function (Booking $booking) {

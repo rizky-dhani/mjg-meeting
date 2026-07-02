@@ -84,6 +84,21 @@ return [
             ]) : [],
         ],
 
+        'medquest_users' => [
+            'driver' => env('MEDQUEST_USERS_DRIVER', 'mysql'),
+            'host' => env('MEDQUEST_USERS_HOST', '127.0.0.1'),
+            'port' => env('MEDQUEST_USERS_PORT', '3306'),
+            'database' => env('MEDQUEST_USERS_DATABASE', 'medquest_users'),
+            'username' => env('MEDQUEST_USERS_USERNAME', 'root'),
+            'password' => env('MEDQUEST_USERS_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),

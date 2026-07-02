@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Support\Approvals\Evaluation;
+use App\Models\Booking;
 
 use App\Models\ApprovalFlow;
 use App\Models\ApprovalFlowStep;
@@ -71,6 +72,26 @@ class ApprovalEvaluator
         return null;
     }
 
+
+    /**
+     * Get all users eligible to approve a given step for a booking.
+     */
+    public static function getEligibleApprovers(Booking $booking, ApprovalFlowStep $step): \Illuminate\Support\Collection
+    {
+        if ($step->role === null) {
+            return collect();
+        }
+
+        $query = User::role($step->role->name);
+
+        return match ($step->scope) {
+            'department' => $query->where('department_id', $step->department_id)->get(),
+            'requester' => $booking->user !== null
+                ? $query->where('department_id', $booking->user->department_id)->get()
+                : collect(),
+            default => $query->get(),
+        };
+    }
     /**
      * Find the ApprovalFlow for the given model type.
      */
