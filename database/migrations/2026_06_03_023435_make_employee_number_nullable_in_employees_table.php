@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('employees', function (Blueprint $table) {
             $table->string('employee_number', 50)->nullable()->change();
         });
     }
 
     public function down(): void
     {
-        // Before rolling back, ensure no null employee_number values exist
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('employees', function (Blueprint $table) {
             $table->string('employee_number', 50)->nullable(false)->change();
         });
     }
