@@ -45,17 +45,17 @@ class User extends Authenticatable implements FilamentUser
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Identity\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function department(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Identity\Department::class);
+        return $this->belongsTo(Department::class);
     }
 
     public function designation(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Identity\Designation::class);
+        return $this->belongsTo(Designation::class);
     }
 
     public function bookings(): HasMany
