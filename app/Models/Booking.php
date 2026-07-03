@@ -152,6 +152,7 @@ class Booking extends Model implements Eventable
             ->start($this->starts_at)
             ->end($this->ends_at)
             ->backgroundColor($color)
+            ->textColor('#ffffff')
             ->resourceId((string) $this->room_id);
     }
 
