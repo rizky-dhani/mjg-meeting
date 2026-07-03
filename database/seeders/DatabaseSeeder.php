@@ -6,15 +6,16 @@ use App\Models\Department;
 use App\Models\Location;
 use App\Models\Room;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
         // Demo departments (created first so seeders can reference them)
-        Department::firstOrCreate(['code' => 'IT'], ['name' => 'Information Technology']);
-        Department::firstOrCreate(['code' => 'HR'], ['name' => 'Human Resources']);
-        Department::firstOrCreate(['code' => 'MKT'], ['name' => 'Marketing']);
+        Department::firstOrCreate(['name' => 'Information Technology'], ['department_id' => Str::uuid()]);
+        Department::firstOrCreate(['name' => 'Human Resources'], ['department_id' => Str::uuid()]);
+        Department::firstOrCreate(['name' => 'Marketing'], ['department_id' => Str::uuid()]);
 
         $this->call([
             RoleSeeder::class,

@@ -10,16 +10,18 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        $it = Department::where('name', 'Information Technology')->first();
+        $hr = Department::where('name', 'Human Resources')->first();
+
         // Super Admin
         $superAdmin = User::firstOrCreate(
             ['email' => 'superadmin@medquest.co.id'],
             [
                 'name' => 'Super Admin',
                 'password' => 'Superadmin2026!',
-                'employee_number' => 'SUP-001',
-                'department_id' => Department::where('code', 'IT')->value('id'),
-                'position' => 'System Administrator',
-                'initials' => 'SPA',
+                'employee_code' => 'SUP-001',
+                'department_id' => $it?->department_id,
+                'initial' => 'SPA',
             ]
         );
         $superAdmin->assignRole('Super Admin');
@@ -30,10 +32,9 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'password' => 'Medquest.1',
-                'employee_number' => 'ADM-002',
-                'department_id' => Department::where('code', 'IT')->value('id'),
-                'position' => 'Administrator',
-                'initials' => 'ADM',
+                'employee_code' => 'ADM-002',
+                'department_id' => $it?->department_id,
+                'initial' => 'ADM',
             ]
         );
         $admin->assignRole('Admin');
@@ -44,10 +45,9 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Head',
                 'password' => 'Medquest.1',
-                'employee_number' => 'HED-001',
-                'department_id' => Department::where('code', 'HR')->value('id'),
-                'position' => 'Department Head',
-                'initials' => 'HED',
+                'employee_code' => 'HED-001',
+                'department_id' => $hr?->department_id,
+                'initial' => 'HED',
             ]
         );
         $head->assignRole('Head');
