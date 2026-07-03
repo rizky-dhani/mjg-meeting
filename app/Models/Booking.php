@@ -3,11 +3,8 @@
 namespace App\Models;
 
 use App\Models\ApprovalFlow;
-use App\Support\Approvals\Evaluation\ApprovalState;
 use App\Support\Approvals\Traits\HasApprovalFlow;
 use Carbon\Carbon;
-use Guava\Calendar\Contracts\Eventable;
-use Guava\Calendar\ValueObjects\CalendarEvent;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Booking extends Model implements Eventable
+class Booking extends Model
 {
     /** @use HasFactory<\Database\Factories\BookingFactory> */
     use HasFactory, HasApprovalFlow, HasUuids;
@@ -135,25 +132,6 @@ class Booking extends Model implements Eventable
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
-    }
-
-    public function toCalendarEvent(): CalendarEvent
-    {
-        $status = $this->approvalState();
-        $color = match ($status) {
-            ApprovalState::Approved => '#10b981',
-            ApprovalState::Denied => '#ef4444',
-            ApprovalState::Pending => '#f59e0b',
-            default => '#6b7280',
-        };
-
-        return CalendarEvent::make($this)
-            ->title($this->title . ' (' . $this->room->name . ')')
-            ->start($this->starts_at)
-            ->end($this->ends_at)
-            ->backgroundColor($color)
-            ->textColor('#ffffff')
-            ->resourceId((string) $this->room_id);
     }
 
     protected static function booted(): void
