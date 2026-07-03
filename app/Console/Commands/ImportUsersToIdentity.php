@@ -42,7 +42,7 @@ class ImportUsersToIdentity extends Command
             $identityUser = IdentityUser::where('email', $localUser->email)->first();
 
             if ($identityUser) {
-                $this->line("  Matched: {$localUser->email} → {$identityUser->userId}");
+                $this->line("  Matched: {$localUser->email} → {$identityUser->user_id}");
                 $matched++;
             } else {
                 // Check for duplicate emails within the import batch
@@ -81,7 +81,7 @@ class ImportUsersToIdentity extends Command
             if (! $dryRun && $identityUser) {
                 // Update local user with identity userId
                 User::where('id', $localUser->id)->update([
-                    'user_id' => $identityUser->userId,
+                    'user_id' => $identityUser->user_id,
                 ]);
             }
 
@@ -109,14 +109,14 @@ class ImportUsersToIdentity extends Command
                     ->where('name', $localDept->name)
                     ->first();
                 if ($identityDept) {
-                    return $identityDept->departmentId;
+                    return $identityDept->department_id;
                 }
 
                 // Create department in identity DB
                 return IdentityDepartment::create([
                     'company_id' => $companyId,
                     'name' => $localDept->name,
-                ])->departmentId;
+                ])->department_id;
             }
         }
 
@@ -125,13 +125,13 @@ class ImportUsersToIdentity extends Command
             ['company_id' => $companyId, 'name' => 'General'],
         );
 
-        return $general->departmentId;
+        return $general->department_id;
     }
 
     protected function resolveDesignation(string $name): string
     {
         return Designation::firstOrCreate(
             ['name' => $name],
-        )->designationId;
+        )->designation_id;
     }
 }

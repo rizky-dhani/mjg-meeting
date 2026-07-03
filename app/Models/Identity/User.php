@@ -10,19 +10,15 @@ class User extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'medquest_users';
     protected $table = 'users';
-    protected $primaryKey = 'userId';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
-        'userId',
-        'company_id',
-        'employee_code',
+        'user_id',
         'name',
         'email',
+        'employee_code',
         'initial',
+        'company_id',
         'department_id',
         'designation_id',
         'is_active',
@@ -39,16 +35,16 @@ class User extends Model
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class, 'company_id', 'companyId');
+        return $this->belongsTo(Company::class);
     }
 
     public function department(): BelongsTo
     {
-        return $this->belongsTo(Department::class, 'department_id', 'departmentId');
+        return $this->belongsTo(Department::class);
     }
 
     public function designation(): BelongsTo
     {
-        return $this->belongsTo(Designation::class, 'designation_id', 'designationId');
+        return $this->belongsTo(Designation::class);
     }
 }

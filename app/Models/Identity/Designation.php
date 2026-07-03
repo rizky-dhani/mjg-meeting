@@ -10,19 +10,15 @@ class Designation extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'medquest_users';
     protected $table = 'designations';
-    protected $primaryKey = 'designationId';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
-        'designationId',
+        'designation_id',
         'name',
     ];
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class, 'designation_id', 'designationId');
+        return $this->hasMany(User::class);
     }
 }

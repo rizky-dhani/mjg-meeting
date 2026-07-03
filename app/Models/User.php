@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Identity\User as IdentityUser;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,7 +16,19 @@ class User extends Authenticatable implements FilamentUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles;
 
-    protected $fillable = ['user_id', 'password'];
+    protected $fillable = [
+        'user_id',
+        'password',
+        'name',
+        'email',
+        'employee_code',
+        'initial',
+        'company_id',
+        'department_id',
+        'designation_id',
+        'is_active',
+        'email_verified_at',
+    ];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -25,33 +36,27 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'email_verified_at' => 'datetime',
         ];
     }
-    // ── Filament user name (delegated to identity DB) ──
 
-    public function getNameAttribute(): string
+    // ── Relations ──
+
+    public function company(): BelongsTo
     {
-        if ($this->relationLoaded('identity')) {
-            return $this->identity?->name ?? 'User';
-        }
-
-        // Lazy load with safety check
-        try {
-            $identity = $this->identity;
-            return $identity?->name ?? 'User';
-        } catch (\Throwable) {
-            return 'User';
-        }
+        return $this->belongsTo(\App\Models\Identity\Company::class);
     }
 
-    // ── Identity relation (profile data from identity DB) ──
-
-    public function identity(): BelongsTo
+    public function department(): BelongsTo
     {
-        return $this->belongsTo(IdentityUser::class, 'user_id', 'userId');
+        return $this->belongsTo(\App\Models\Identity\Department::class);
     }
 
-    // ── Local relations ──
+    public function designation(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Identity\Designation::class);
+    }
 
     public function bookings(): HasMany
     {
@@ -64,6 +69,11 @@ class User extends Authenticatable implements FilamentUser
     }
 
     // ── Filament ──
+
+    public function getNameAttribute(): string
+    {
+        return $this->attributes['name'] ?? $this->getAttributes()['name'] ?? 'User';
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {

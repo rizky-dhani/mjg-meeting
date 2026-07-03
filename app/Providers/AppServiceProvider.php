@@ -2,12 +2,10 @@
 
 namespace App\Providers;
 
-use App\Auth\IdentityUserProvider;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,13 +18,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Auth::provider('medquest_users', function ($app, array $config) {
-            return new IdentityUserProvider(
-                $app['hash'],
-                config('auth.providers.users.model'),
-            );
-        });
-
         Notifications::alignment(Alignment::Center);
         Notifications::verticalAlignment(VerticalAlignment::Start);
 

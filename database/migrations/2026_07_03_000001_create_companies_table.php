@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->char('department_id', 36)->unique();
-            $table->char('company_id', 36)->nullable();
+            $table->char('company_id', 36)->unique();
             $table->string('name');
+            $table->string('initial', 10);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -20,6 +20,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('companies');
     }
 };

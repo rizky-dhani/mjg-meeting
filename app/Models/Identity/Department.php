@@ -11,25 +11,21 @@ class Department extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'medquest_users';
     protected $table = 'departments';
-    protected $primaryKey = 'departmentId';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
-        'departmentId',
+        'department_id',
         'company_id',
         'name',
     ];
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class, 'company_id', 'companyId');
+        return $this->belongsTo(Company::class);
     }
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class, 'department_id', 'departmentId');
+        return $this->hasMany(User::class);
     }
 }
