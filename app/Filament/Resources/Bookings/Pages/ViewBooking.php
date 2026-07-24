@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Spatie\Activitylog\Models\Activity;
 
 class ViewBooking extends ViewRecord
 {
@@ -78,7 +79,10 @@ class ViewBooking extends ViewRecord
                         ],
                         $this->getApprovalStepsComponents(),
                     )),
+                Section::make('Activity Log')
+                    ->components($this->getActivityLogComponents()),
             ]);
+
     }
 
     protected function getHeaderActions(): array
@@ -193,5 +197,60 @@ class ViewBooking extends ViewRecord
         $user = $query->first();
 
         return $user?->name ?? "{$roleName} (no user)";
+    }
+
+    protected function getActivityLogComponents(): array
+    {
+        /** @var Booking $record */
+        $record = $this->getRecord();
+
+        $activities = Activity::query()
+            ->where('subject_type', $record->getMorphClass())
+            ->where('subject_id', $record->getKey())
+            ->with('causer')
+            ->latest()
+            ->get();
+
+        if ($activities->isEmpty()) {
+            return [
+                TextEntry::make('_no_activity')
+                    ->label('')
+                    ->state('No activity recorded yet.'),
+            ];
+        }
+
+        $components = [];
+
+        foreach ($activities as $i => $activity) {
+            $prefix = "_{$i}";
+            $causerName = $activity->causer?->name ?? 'System';
+
+            $components[] = Group::make()
+                ->columns(4)
+                ->components([
+                    TextEntry::make("{$prefix}_event")
+                        ->label('')
+                        ->badge()
+                        ->state(ucfirst($activity->event ?? 'info'))
+                        ->color(match ($activity->event) {
+                            'created' => 'info',
+                            'approved' => 'success',
+                            'rejected' => 'danger',
+                            'updated' => 'warning',
+                            default => 'gray',
+                        }),
+                    TextEntry::make("{$prefix}_description")
+                        ->label('')
+                        ->state($activity->description),
+                    TextEntry::make("{$prefix}_causer")
+                        ->label('')
+                        ->state($causerName),
+                    TextEntry::make("{$prefix}_date")
+                        ->label('')
+                        ->state($activity->created_at->format('d M Y H:i')),
+                ]);
+        }
+
+        return $components;
     }
 }

@@ -142,6 +142,16 @@ class Booking extends Model
 
             $booking->user?->notify(new \App\Notifications\BookingSubmitted($booking));
 
+            activity()
+                ->performedOn($booking)
+                ->causedBy($booking->user)
+                ->withProperties([
+                    'booking_number' => $booking->booking_number,
+                    'title' => $booking->title,
+                ])
+                ->event('created')
+                ->log('Booking created');
+
             $firstStep = $booking->currentActionableStep();
             if ($firstStep !== null) {
                 $approvers = \App\Support\Approvals\Evaluation\ApprovalEvaluator::getEligibleApprovers($booking, $firstStep);
@@ -152,10 +162,32 @@ class Booking extends Model
             }
         });
 
+
+        static::updated(function (Booking $booking) {
+            if ($booking->isDirty('date') || $booking->isDirty('starts_at') || $booking->isDirty('ends_at') || $booking->isDirty('room_id')) {
+                activity()
+                    ->performedOn($booking)
+                    ->causedBy(auth()->user())
+                    ->withProperties([
+                        'old' => $booking->getOriginal(),
+                        'new' => $booking->getChanges(),
+                    ])
+                    ->event('updated')
+                    ->log('Booking rescheduled');
+            }
+        });
+
         static::deleting(function (Booking $booking) {
             if (! $booking->isPending()) {
                 throw new \Exception('Only bookings with pending status can be deleted.');
             }
+
+            activity()
+                ->performedOn($booking)
+                ->causedBy(auth()->user())
+                ->withProperties(['booking_number' => $booking->booking_number])
+                ->event('deleted')
+                ->log('Booking deleted');
         });
     }
 }

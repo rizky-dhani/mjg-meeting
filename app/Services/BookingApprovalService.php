@@ -41,12 +41,31 @@ class BookingApprovalService
             'reason' => $reason,
         ]);
 
+        activity()
+            ->performedOn($booking)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'step' => $step->step_order,
+                'role' => $step->role->name,
+                'reason' => $reason,
+            ])
+            ->event('approved')
+            ->log("Booking approved (Step {$step->step_order})");
+
         $booking->refresh();
+
 
         if ($booking->isApproved()) {
             $this->generateQr($booking);
             $this->createAttendance($booking);
             $booking->user->notify(new \App\Notifications\BookingApproved($booking));
+
+            activity()
+                ->performedOn($booking)
+                ->causedBy(auth()->user())
+                ->withProperties(['booking_number' => $booking->booking_number])
+                ->event('approved')
+                ->log('Booking fully approved');
         } else {
             $this->notifyNextApprovers($booking);
         }
@@ -84,6 +103,17 @@ class BookingApprovalService
             'approval_flow_step_id' => $step->id,
             'reason' => $reason,
         ]);
+
+        activity()
+            ->performedOn($booking)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'step' => $step->step_order,
+                'role' => $step->role->name,
+                'reason' => $reason,
+            ])
+            ->event('rejected')
+            ->log("Booking rejected (Step {$step->step_order})");
 
         $booking->refresh();
         $booking->user->notify(new \App\Notifications\BookingRejected($booking, $reason));
