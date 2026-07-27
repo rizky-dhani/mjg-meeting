@@ -40,6 +40,7 @@ class DashboardPanelProvider extends PanelProvider
             ])
             ->brandLogo(asset('assets/images/LOGO-MEDQUEST-HD.png'))
             ->favicon(asset('assets/images/Medquest-Favicon.png'))
+            ->brandName('MedQuest')
             ->renderHook(
                 PanelsRenderHook::HEAD_START,
                 fn (): Htmlable => app(Vite::class)(['resources/css/app.css']),

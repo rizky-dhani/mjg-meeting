@@ -36,3 +36,4 @@ AGENTS.md
 /graphify-out/
 *.sqlite
 *.sqlite3
+*:Zone.Identifier
