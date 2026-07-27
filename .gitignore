@@ -33,3 +33,6 @@ opencode.json
 /debug/
 /docs/
 AGENTS.md
+/graphify-out/
+*.sqlite
+*.sqlite3

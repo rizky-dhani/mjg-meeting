@@ -36,8 +36,10 @@ class DashboardPanelProvider extends PanelProvider
             ->login()
             ->maxContentWidth(Width::Full)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => '#101399',
             ])
+            ->brandLogo(asset('assets/images/LOGO-MEDQUEST-HD.png'))
+            ->favicon(asset('assets/images/Medquest-Favicon.png'))
             ->renderHook(
                 PanelsRenderHook::HEAD_START,
                 fn (): Htmlable => app(Vite::class)(['resources/css/app.css']),
