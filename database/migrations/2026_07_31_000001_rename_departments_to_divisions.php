@@ -31,7 +31,7 @@ return new class extends Migration
         });
 
         DB::table('users')
-            ->join('divisions', 'users.department_id', '=', 'divisions.department_id')
+            ->join('divisions', 'users.department_id', '=', 'divisions.division_id')
             ->update(['users.division_id_temp' => DB::raw('divisions.id')]);
 
         Schema::table('users', function (Blueprint $table) {
