@@ -182,16 +182,16 @@ class ViewBooking extends ViewRecord
 
         $query = User::role($roleName);
 
-        if ($step->scope === 'department' && $step->department_id !== null) {
-            $query->where('department_id', $step->department_id);
+        if ($step->scope === 'department' && $step->division_id !== null) {
+            $query->where('division_id', $step->division_id);
         }
 
         if ($step->scope === 'requester') {
-            $requesterDeptId = $record->user?->department_id;
-            if ($requesterDeptId === null) {
+            $requesterDivId = $record->user?->division_id;
+            if ($requesterDivId === null) {
                 return 'No eligible approver';
             }
-            $query->where('department_id', $requesterDeptId);
+            $query->where('division_id', $requesterDivId);
         }
 
         $user = $query->first();

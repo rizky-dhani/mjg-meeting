@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Department;
+use App\Models\Division;
 use App\Models\Position;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,7 +16,7 @@ class PositionFactory extends Factory
         $positions = ['Manager', 'Supervisor', 'Staff', 'Lead', 'Coordinator', 'Specialist', 'Analyst'];
 
         return [
-            'department_id' => Department::factory(),
+            'division_id' => Division::factory(),
             'name' => fake()->randomElement($positions) . ' - ' . fake()->word(),
             'description' => fake()->sentence(),
         ];

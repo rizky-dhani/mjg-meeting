@@ -19,11 +19,11 @@ class BookingDivisionStats extends BaseWidget
     {
         $user = auth()->user();
 
-        if (! $user->department_id) {
+        if (! $user->division_id) {
             return $this->emptyStats();
         }
 
-        $departmentUserIds = User::where('department_id', $user->department_id)
+        $divisionUserIds = User::where('division_id', $user->division_id)
             ->pluck('id');
 
         $flow = ApprovalFlow::where('model_type', Booking::class)->first();

@@ -85,9 +85,9 @@ class ApprovalEvaluator
         $query = User::role($step->role->name);
 
         return match ($step->scope) {
-            'department' => $query->where('department_id', $step->department_id)->get(),
+            'department' => $query->where('division_id', $step->division_id)->get(),
             'requester' => $booking->user !== null
-                ? $query->where('department_id', $booking->user->department_id)->get()
+                ? $query->where('division_id', $booking->user->division_id)->get()
                 : collect(),
             default => $query->get(),
         };
@@ -97,12 +97,12 @@ class ApprovalEvaluator
      */
     public static function findFlow(Model $model): ?ApprovalFlow
     {
-        return ApprovalFlow::where('model_type', $model::class)->with('steps.role', 'steps.department')->first();
+        return ApprovalFlow::where('model_type', $model::class)->with('steps.role', 'steps.division')->first();
     }
 
     /**
      * Determine whether a step should be auto-skipped.
-     * When scope=requester and no user in the requester's department has the
+     * When scope=requester and no user in the requester's division has the
      * required role, the step cannot be fulfilled — skip it automatically.
      */
     protected static function shouldAutoSkipStep(Model $model, ApprovalFlowStep $step): bool
@@ -113,11 +113,11 @@ class ApprovalEvaluator
 
         $requester = $model->user;
 
-        if ($requester === null || $requester->department_id === null) {
+        if ($requester === null || $requester->division_id === null) {
             return true;
         }
 
-        return ! User::where('department_id', $requester->department_id)
+        return ! User::where('division_id', $requester->division_id)
             ->role($step->role->name)
             ->exists();
     }

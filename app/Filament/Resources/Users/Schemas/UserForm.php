@@ -37,8 +37,8 @@ class UserForm
                                 TextInput::make('employee_number')
                                     ->maxLength(50)
                                     ->unique(ignoreRecord: true),
-                                Select::make('department_id')
-                                    ->relationship('department', 'name')
+                                Select::make('division_id')
+                                    ->relationship('division', 'name')
                                     ->required()
                                     ->searchable()
                                     ->preload(),

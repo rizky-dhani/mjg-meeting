@@ -20,14 +20,14 @@ class BookingsList extends BaseWidget
     {
         $user = auth()->user();
 
-        if (! $user->department_id) {
+        if (! $user->division_id) {
             return Booking::whereRaw('0 = 1');
         }
 
-        $departmentUserIds = User::where('department_id', $user->department_id)
+        $divisionUserIds = User::where('division_id', $user->division_id)
             ->pluck('id');
 
-        return Booking::whereIn('user_id', $departmentUserIds)
+        return Booking::whereIn('user_id', $divisionUserIds)
             ->with('approvals');
     }
 

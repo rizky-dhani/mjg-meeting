@@ -16,8 +16,8 @@ class PositionForm
             ->components([
                 Section::make('Position Info')
                     ->schema([
-                        Select::make('department_id')
-                            ->relationship('department', 'name')
+                        Select::make('division_id')
+                            ->relationship('division', 'name')
                             ->required()
                             ->searchable()
                             ->preload(),

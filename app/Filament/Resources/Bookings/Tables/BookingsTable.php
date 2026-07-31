@@ -142,12 +142,12 @@ class BookingsTable
             }
         }
 
-        // Head: sees department-scoped bookings for approval
+        // Head: sees division-scoped bookings for approval
         if ($user->hasRole('Head')) {
-            $departmentUserIds = User::where('department_id', $user->department_id)
+            $divisionUserIds = User::where('division_id', $user->division_id)
                 ->pluck('id');
 
-            return $query->whereIn('booker_id', $departmentUserIds);
+            return $query->whereIn('booker_id', $divisionUserIds);
         }
 
         // Everyone else (Admin, etc.): only sees their own bookings
@@ -174,13 +174,13 @@ class BookingsTable
         }
 
         return match ($step->scope) {
-            // Specific department: user must belong to that department
-            'department' => $step->department !== null && $user->department_id === $step->department->id,
+            // Specific division: user must belong to that division
+            'department' => $step->division !== null && $user->division_id === $step->division->id,
 
-            // Same as requester: user must be in the requester's department
-            'requester' => $user->department_id === $record->user->department_id,
+            // Same as requester: user must be in the requester's division
+            'requester' => $user->division_id === $record->user->division_id,
 
-            // All departments: no additional check needed
+            // All divisions: no additional check needed
             default => true,
         };
     }

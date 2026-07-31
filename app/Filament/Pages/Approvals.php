@@ -65,17 +65,17 @@ class Approvals extends Page implements HasTable
                 $q->orWhere(function ($sq) use ($flow, $step, $user) {
                     // Scope check: skip steps the user cannot act on
                     if ($step->scope === ApprovalFlowStep::SCOPE_DEPARTMENT) {
-                        if ($step->department_id && $user->department_id !== $step->department_id) {
+                        if ($step->division_id && $user->division_id !== $step->division_id) {
                             $sq->whereRaw('0 = 1');
 
                             return;
                         }
                     }
 
-                    // Requester scope: restrict to the user's department
+                    // Requester scope: restrict to the user's division
                     if ($step->scope === ApprovalFlowStep::SCOPE_REQUESTER) {
-                        if ($user->department_id) {
-                            $sq->whereHas('user', fn ($uq) => $uq->where('department_id', $user->department_id));
+                        if ($user->division_id) {
+                            $sq->whereHas('user', fn ($uq) => $uq->where('division_id', $user->division_id));
                         }
                     }
 
