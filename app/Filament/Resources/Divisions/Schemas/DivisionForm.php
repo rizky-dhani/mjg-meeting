@@ -1,24 +1,24 @@
 <?php
 
-namespace App\Filament\Resources\Departments\Schemas;
+namespace App\Filament\Resources\Divisions\Schemas;
 
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class DepartmentForm
+class DivisionForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Department Info')
+                Section::make('Division Info')
                     ->schema([
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('code')
+                        TextInput::make('initial')
                             ->required()
                             ->maxLength(50)
                             ->unique(ignoreRecord: true),

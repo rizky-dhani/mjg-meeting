@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Filament\Resources\Departments;
+namespace App\Filament\Resources\Divisions;
 
-use App\Filament\Resources\Departments\Pages\ListDepartments;
-use App\Filament\Resources\Departments\Schemas\DepartmentForm;
-use App\Filament\Resources\Departments\Tables\DepartmentsTable;
-use App\Models\Department;
+use App\Filament\Resources\Divisions\Pages\ListDivisions;
+use App\Filament\Resources\Divisions\Schemas\DivisionForm;
+use App\Filament\Resources\Divisions\Tables\DivisionsTable;
+use App\Models\Division;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use UnitEnum;
 
-class DepartmentResource extends Resource
+class DivisionResource extends Resource
 {
-    protected static ?string $model = Department::class;
+    protected static ?string $model = Division::class;
 
     protected static string | UnitEnum | null $navigationGroup = 'System Management';
 
@@ -24,25 +24,23 @@ class DepartmentResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return DepartmentForm::configure($schema);
+        return DivisionForm::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return DepartmentsTable::configure($table);
+        return DivisionsTable::configure($table);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListDepartments::route('/'),
+            'index' => ListDivisions::route('/'),
         ];
     }
 

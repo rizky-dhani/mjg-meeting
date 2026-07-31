@@ -25,8 +25,8 @@ class UsersTable
                 TextColumn::make('employee_number')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('department.name')
-                    ->label(__('Department'))
+                TextColumn::make('division.name')
+                    ->label(__('Division'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('position')

@@ -64,27 +64,27 @@ class ApprovalFlowForm
                             ->schema([
                                 Select::make('scope')
                                     ->options([
-                                        'all' => 'All Departments',
-                                        'department' => 'Specific Department',
+                                        'all' => 'All Divisions',
+                                        'department' => 'Specific Divisions',
                                         'requester' => 'Same as Requester',
                                     ])
                                     ->default('all')
                                     ->required()
-                                    ->label('Dept. Scope')
+                                    ->label('Div. Scope')
                                     ->live(),
 
-                                Select::make('department_id')
-                                    ->relationship('department', 'name', fn (Builder $query) => $query->orderBy('name'))
+                                Select::make('division_id')
+                                    ->relationship('division', 'name', fn (Builder $query) => $query->orderBy('name'))
                                     ->nullable()
                                     ->searchable()
                                     ->preload()
-                                    ->label('Department')
+                                    ->label('Division')
                                     ->hidden(fn (Get $get) => $get('scope') !== 'department')
                                     ->createOptionForm([
                                         TextInput::make('name')
                                             ->required()
                                             ->maxLength(255),
-                                        TextInput::make('code')
+                                        TextInput::make('initial')
                                             ->required()
                                             ->maxLength(50)
                                             ->unique(),

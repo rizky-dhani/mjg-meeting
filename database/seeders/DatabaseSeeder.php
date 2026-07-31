@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Department;
+use App\Models\Division;
 use App\Models\Location;
 use App\Models\Room;
 use Illuminate\Database\Seeder;
@@ -13,9 +13,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Demo departments (created first so seeders can reference them)
-        Department::firstOrCreate(['name' => 'Information Technology'], ['department_id' => Str::uuid()]);
-        Department::firstOrCreate(['name' => 'Human Resources'], ['department_id' => Str::uuid()]);
-        Department::firstOrCreate(['name' => 'Marketing'], ['department_id' => Str::uuid()]);
+        Division::firstOrCreate(['name' => 'Information Technology'], ['division_id' => Str::uuid(), 'initial' => 'IT']);
+        Division::firstOrCreate(['name' => 'Human Resources'], ['division_id' => Str::uuid(), 'initial' => 'HR']);
+        Division::firstOrCreate(['name' => 'Marketing'], ['division_id' => Str::uuid(), 'initial' => 'MKT']);
 
         $this->call([
             RoleSeeder::class,

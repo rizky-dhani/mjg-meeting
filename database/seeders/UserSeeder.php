@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Department;
+use App\Models\Division;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -10,8 +10,8 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $it = Department::where('name', 'Information Technology')->first();
-        $hr = Department::where('name', 'Human Resources')->first();
+        $it = Division::where('name', 'Information Technology')->first();
+        $hr = Division::where('name', 'Human Resources')->first();
 
         // Super Admin
         $superAdmin = User::firstOrCreate(
@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
                 'name' => 'Super Admin',
                 'password' => 'Superadmin2026!',
                 'employee_code' => 'SUP-001',
-                'department_id' => $it?->department_id,
+                'division_id' => $it?->division_id,
                 'initial' => 'SPA',
             ]
         );
@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
                 'name' => 'Admin',
                 'password' => 'Medquest.1',
                 'employee_code' => 'ADM-002',
-                'department_id' => $it?->department_id,
+                'division_id' => $it?->division_id,
                 'initial' => 'ADM',
             ]
         );
@@ -46,7 +46,7 @@ class UserSeeder extends Seeder
                 'name' => 'Head',
                 'password' => 'Medquest.1',
                 'employee_code' => 'HED-001',
-                'department_id' => $hr?->department_id,
+                'division_id' => $hr?->division_id,
                 'initial' => 'HED',
             ]
         );
