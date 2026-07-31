@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
                 'name' => 'Super Admin',
                 'password' => 'Superadmin2026!',
                 'employee_code' => 'SUP-001',
-                'division_id' => $it?->division_id,
+                'division_id' => $it?->id,
                 'initial' => 'SPA',
             ]
         );
@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
                 'name' => 'Admin',
                 'password' => 'Medquest.1',
                 'employee_code' => 'ADM-002',
-                'division_id' => $it?->division_id,
+                'division_id' => $it?->id,
                 'initial' => 'ADM',
             ]
         );
@@ -46,7 +46,7 @@ class UserSeeder extends Seeder
                 'name' => 'Head',
                 'password' => 'Medquest.1',
                 'employee_code' => 'HED-001',
-                'division_id' => $hr?->division_id,
+                'division_id' => $hr?->id,
                 'initial' => 'HED',
             ]
         );
