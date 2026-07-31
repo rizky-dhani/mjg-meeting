@@ -57,7 +57,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function division(): BelongsTo
     {
-        return $this->belongsTo(Division::class, 'division_id', 'division_id');
+        return $this->belongsTo(Division::class);
     }
 
     public function designation(): BelongsTo
