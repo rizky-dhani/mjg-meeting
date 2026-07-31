@@ -2,17 +2,12 @@
 
 namespace App\Filament\Resources\Divisions\Tables;
 
-use App\Exports\DivisionExport;
-use App\Imports\DivisionImport;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Maatwebsite\Excel\Actions\ExportAction;
 
-use function Livewire\livewire;
 
 class DivisionsTable
 {
