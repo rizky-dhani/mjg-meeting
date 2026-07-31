@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['department_id']);
-        });
-        Schema::table('positions', function (Blueprint $table) {
-            $table->dropForeign(['department_id']);
-        });
-        Schema::table('approval_flow_steps', function (Blueprint $table) {
-            $table->dropForeign(['department_id']);
-        });
+        // Only drop FKs that actually exist
+        foreach (['users', 'positions', 'approval_flow_steps'] as $table) {
+            $fks = Schema::getForeignKeys($table);
+            foreach ($fks as $fk) {
+                if (in_array('department_id', $fk['columns'])) {
+                    Schema::table($table, fn (Blueprint $b) => $b->dropForeign(['department_id']));
+                }
+            }
+        }
 
         Schema::rename('departments', 'divisions');
 
@@ -43,15 +43,14 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('approval_flow_steps', function (Blueprint $table) {
-            $table->dropForeign(['division_id']);
-        });
-        Schema::table('positions', function (Blueprint $table) {
-            $table->dropForeign(['division_id']);
-        });
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['division_id']);
-        });
+        foreach (['approval_flow_steps', 'positions', 'users'] as $table) {
+            $fks = Schema::getForeignKeys($table);
+            foreach ($fks as $fk) {
+                if (in_array('division_id', $fk['columns'])) {
+                    Schema::table($table, fn (Blueprint $b) => $b->dropForeign(['division_id']));
+                }
+            }
+        }
 
         Schema::rename('divisions', 'departments');
 
