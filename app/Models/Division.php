@@ -7,16 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Department extends Model
+class Division extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'departments';
+    protected $table = 'divisions';
 
     protected $fillable = [
-        'department_id',
+        'division_id',
         'company_id',
         'name',
+        'initial',
     ];
 
     public function company(): BelongsTo

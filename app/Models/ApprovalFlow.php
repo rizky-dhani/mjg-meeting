@@ -24,12 +24,12 @@ class ApprovalFlow extends Model
         return $this->steps()->count();
     }
 
-    /** @return Collection<int, Department> */
-    public function getDepartmentsAttribute(): Collection
+    /** @return Collection<int, Division> */
+    public function getDivisionsAttribute(): Collection
     {
         return $this->steps
-            ->filter(fn (ApprovalFlowStep $step) => $step->department !== null)
-            ->pluck('department')
+            ->filter(fn (ApprovalFlowStep $step) => $step->division !== null)
+            ->pluck('division')
             ->unique('id')
             ->values();
     }

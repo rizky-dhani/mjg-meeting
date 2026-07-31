@@ -18,9 +18,9 @@ class Company extends Model
         'initial',
     ];
 
-    public function departments(): HasMany
+    public function divisions(): HasMany
     {
-        return $this->hasMany(Department::class);
+        return $this->hasMany(Division::class);
     }
 
     public function users(): HasMany
