@@ -27,7 +27,7 @@ return new class extends Migration
 
         Schema::table('users', function (Blueprint $table) {
             $table->renameColumn('department_id', 'division_id');
-            $table->foreign('division_id')->references('id')->on('divisions')->nullOnDelete();
+            $table->foreign('division_id')->references('division_id')->on('divisions')->nullOnDelete();
         });
 
         Schema::table('positions', function (Blueprint $table) {
@@ -61,7 +61,7 @@ return new class extends Migration
 
         Schema::table('users', function (Blueprint $table) {
             $table->renameColumn('division_id', 'department_id');
-            $table->foreign('department_id')->references('id')->on('departments')->nullOnDelete();
+            $table->foreign('department_id')->references('department_id')->on('departments')->nullOnDelete();
         });
 
         Schema::table('positions', function (Blueprint $table) {
