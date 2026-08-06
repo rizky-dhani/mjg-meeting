@@ -4,21 +4,22 @@ namespace App\Exports;
 
 use App\Models\Division;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class DivisionExport implements FromCollection, WithHeadings, WithMapping, WithStyles
+class DivisionExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
     public function collection()
     {
-        return Division::withCount('users')->get();
+        return Division::all();
     }
 
     public function headings(): array
     {
-        return ['Division ID', 'Name', 'Initial', 'Users Count', 'Created At'];
+        return ['Division ID', 'Name', 'Initial', 'Created At'];
     }
 
     public function map($division): array
@@ -27,7 +28,6 @@ class DivisionExport implements FromCollection, WithHeadings, WithMapping, WithS
             $division->division_id,
             $division->name,
             $division->initial,
-            $division->users_count,
             $division->created_at->format('Y-m-d H:i:s'),
         ];
     }

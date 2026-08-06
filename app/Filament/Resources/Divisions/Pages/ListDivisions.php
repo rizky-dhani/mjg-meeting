@@ -9,8 +9,8 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
-use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListDivisions extends ListRecords
 {
@@ -23,14 +23,24 @@ class ListDivisions extends ListRecords
                 ->label('Export')
                 ->color('success')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->action(fn () => Excel::download(new DivisionExport, 'divisions.xlsx')),
+                ->action(fn () => Excel::download(new DivisionExport, 'divisions_' . now()->format('Y_m_d_His') . '.xlsx')),
             Action::make('import')
                 ->label('Import')
                 ->color('warning')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->form([
                     FileUpload::make('file')
-                        ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel'])
+                        ->storeFiles(false)
+                        ->visibility('private')
+                        ->acceptedFileTypes([
+                            'text/csv',
+                            'text/x-csv',
+                            'application/csv',
+                            'application/x-csv',
+                            'text/comma-separated-values',
+                            'application/vnd.ms-excel',
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        ])
                         ->required(),
                 ])
                 ->action(function (array $data): void {

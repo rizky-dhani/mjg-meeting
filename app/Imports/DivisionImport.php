@@ -12,15 +12,13 @@ class DivisionImport implements ToCollection, WithHeadingRow, WithValidation
 {
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $row) {
-            Division::firstOrCreate(
-                ['name' => $row['name']],
-                [
-                    'division_id' => \Illuminate\Support\Str::uuid(),
-                    'initial' => $row['initial'] ?? '',
-                ]
-            );
-        }
+        $divisions = $rows->map(fn ($row) => [
+            'division_id' => $row['division_id'] ?? \Illuminate\Support\Str::uuid(),
+            'name' => $row['name'],
+            'initial' => $row['initial'] ?? '',
+        ])->toArray();
+
+        Division::upsert($divisions, ['division_id', 'initial'], ['name']);
     }
 
     public function rules(): array

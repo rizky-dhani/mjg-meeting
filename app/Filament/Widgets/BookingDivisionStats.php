@@ -29,7 +29,7 @@ class BookingDivisionStats extends BaseWidget
         $flow = ApprovalFlow::where('model_type', Booking::class)->first();
         $flowName = $flow?->name ?? 'booking_approval';
 
-        $baseQuery = Booking::whereIn('user_id', $departmentUserIds);
+        $baseQuery = Booking::whereIn('user_id', $divisionUserIds);
 
         $total = (clone $baseQuery)->count();
 
