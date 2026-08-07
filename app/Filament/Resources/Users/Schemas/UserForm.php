@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\Position;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
@@ -34,19 +35,19 @@ class UserForm
                     ->schema([
                         Grid::make(2)
                             ->schema([
+                                Select::make('division_id')
+                                    ->relationship('division', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->columnSpanFull(),
                                 TextInput::make('employee_number')
                                     ->maxLength(50)
                                     ->unique(ignoreRecord: true),
-                                Select::make('division_id')
-                                    ->relationship('division', 'name')
-                                    ->required()
+                                Select::make('position')
+                                    ->options(fn () => Position::pluck('name', 'name'))
                                     ->searchable()
                                     ->preload(),
-                                TextInput::make('position')
-                                    ->required()
-                                    ->maxLength(255),
                                 TextInput::make('initials')
-                                    ->required()
                                     ->maxLength(10),
                                 TextInput::make('phone')
                                     ->maxLength(50)
