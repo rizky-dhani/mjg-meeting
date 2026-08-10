@@ -7,14 +7,14 @@ use App\Filament\Resources\Bookings\Tables\BookingsTable;
 use App\Models\ApprovalFlow;
 use App\Models\ApprovalFlowStep;
 use App\Models\Booking;
+use Filament\Actions\ViewAction;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
-use Filament\Tables\Table;
-use Filament\Actions\ViewAction;
-use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,13 +22,29 @@ class Approvals extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-check-badge';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
 
     protected static ?int $navigationSort = 2;
 
     protected static ?string $title = 'Approvals';
 
     protected static ?string $slug = 'approvals';
+
+    public static function canView(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+
+        return $user !== null && (
+            $user->hasRole('Super Admin')
+            || $user->hasRole('Admin')
+            || $user->hasRole('Head')
+        );
+    }
 
     public static function getNavigationBadge(): ?string
     {
@@ -49,6 +65,13 @@ class Approvals extends Page implements HasTable
             return $query->whereRaw('0 = 1');
         }
 
+        $isDivisionScoped = $user->hasRole('Head') || $user->hasRole('Admin');
+
+        // Head/Admin: only approvals for bookings from their own division
+        if ($isDivisionScoped && $user->division_id !== null) {
+            $query->whereHas('booker', fn ($uq) => $uq->where('division_id', $user->division_id));
+        }
+
         $userRoleNames = $user->getRoleNames();
 
         $matchingSteps = $flow->steps()
@@ -57,7 +80,30 @@ class Approvals extends Page implements HasTable
             ->get();
 
         if ($matchingSteps->isEmpty()) {
-            return $query->whereRaw('0 = 1');
+            // No actionable step for this user: division-scoped viewers (e.g. Head
+            // without a matching flow step) still see their division's in-flight
+            // approvals; everyone else sees nothing.
+            if (! $isDivisionScoped) {
+                return $query->whereRaw('0 = 1');
+            }
+
+            return $query
+                ->whereHas('approvals', fn ($aq) => $aq->where('key', $flow->name))
+                ->whereDoesntHave('approvals', fn ($aq) => $aq
+                    ->where('key', $flow->name)
+                    ->whereIn('status', ['rejected', 'denied']))
+                ->whereRaw('EXISTS (
+                    SELECT 1 FROM approval_flow_steps s
+                    WHERE s.approval_flow_id = ?
+                      AND NOT EXISTS (
+                          SELECT 1 FROM approvals a
+                          WHERE a.approvable_type = ?
+                            AND a.approvable_id = bookings.id
+                            AND a.approval_flow_step_id = s.id
+                            AND a.status = ?
+                            AND a.deleted_at IS NULL
+                      )
+                )', [$flow->id, Booking::class, 'approved']);
         }
 
         $query->where(function ($q) use ($flow, $matchingSteps, $user) {
@@ -118,25 +164,25 @@ class Approvals extends Page implements HasTable
     protected function getTableColumns(): array
     {
         return [
-            \Filament\Tables\Columns\TextColumn::make('booking_number')
+            TextColumn::make('booking_number')
                 ->label('Booking #')
                 ->searchable()
                 ->sortable(),
-            \Filament\Tables\Columns\TextColumn::make('date')
+            TextColumn::make('date')
                 ->sortable()
                 ->state(fn (Booking $record): string => strtoupper($record->date->format('d F Y'))),
-            \Filament\Tables\Columns\TextColumn::make('time')
+            TextColumn::make('time')
                 ->label('Time')
-                ->state(fn (Booking $record): string => $record->starts_at->format('H:i') . ' - ' . $record->ends_at->format('H:i'))
+                ->state(fn (Booking $record): string => $record->starts_at->format('H:i').' - '.$record->ends_at->format('H:i'))
                 ->sortable(['starts_at', 'ends_at']),
-            \Filament\Tables\Columns\TextColumn::make('title')
+            TextColumn::make('title')
                 ->searchable()
                 ->sortable()
                 ->limit(30),
-            \Filament\Tables\Columns\TextColumn::make('room.name')
+            TextColumn::make('room.name')
                 ->sortable()
                 ->searchable(),
-            \Filament\Tables\Columns\TextColumn::make('user.name')
+            TextColumn::make('user.name')
                 ->sortable()
                 ->searchable()
                 ->label('Booked by'),

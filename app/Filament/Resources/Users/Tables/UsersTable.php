@@ -2,11 +2,15 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
+use Spatie\Permission\Models\Role;
 
 class UsersTable
 {
@@ -22,15 +26,18 @@ class UsersTable
                     ->label(__('Email'))
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('employee_number')
+                TextColumn::make('employee_code')
+                    ->label(__('Employee Number'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('division.name')
                     ->label(__('Division'))
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('position')
+                TextColumn::make('designation.name')
+                    ->label(__('Designation'))
                     ->searchable()
+                    ->sortable()
                     ->toggleable(),
                 TextColumn::make('roles.name')
                     ->label(__('Role'))
@@ -46,6 +53,20 @@ class UsersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('assignRole')
+                        ->label('Set Role')
+                        ->visible(fn (): bool => auth()->user()?->hasRole('Super Admin') ?? false)
+                        ->form([
+                            Select::make('role')
+                                ->label('Role')
+                                ->options(Role::pluck('name', 'id'))
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $records->each(fn ($record) => $record->syncRoles([$data['role']]));
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);

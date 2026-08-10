@@ -5,27 +5,26 @@ namespace App\Filament\Resources\Bookings\Tables;
 use App\Models\ApprovalFlow;
 use App\Models\Booking;
 use App\Models\User;
-use App\Support\Approvals\Evaluation\ApprovalState;
+use App\Services\BookingApprovalService;
 use App\Support\Approvals\Models\Approval;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Notifications\Notification;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Milon\Barcode\Facades\DNS2DFacade;
 
 class BookingsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => static::scopeQuery($query))
+            ->modifyQueryUsing(fn (Builder $query) => static::applyPendingFirstSort(static::scopeQuery($query)))
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('booking_number')
                     ->label('Booking #')
@@ -36,7 +35,7 @@ class BookingsTable
                     ->state(fn (Booking $record): string => strtoupper($record->date->format('d F Y'))),
                 TextColumn::make('time')
                     ->label('Time')
-                    ->state(fn (Booking $record): string => $record->starts_at->format('H:i') . ' - ' . $record->ends_at->format('H:i'))
+                    ->state(fn (Booking $record): string => $record->starts_at->format('H:i').' - '.$record->ends_at->format('H:i'))
                     ->sortable(['starts_at', 'ends_at']),
                 TextColumn::make('title')
                     ->searchable()
@@ -52,9 +51,9 @@ class BookingsTable
                 TextColumn::make('approval_state')
                     ->label('Status')
                     ->badge()
-                    ->getStateUsing(fn(Booking $record): string => $record->approvalState()->value)
-                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
-                    ->color(fn(string $state): string => match ($state) {
+                    ->getStateUsing(fn (Booking $record): string => $record->approvalState()->value)
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->color(fn (string $state): string => match ($state) {
                         'approved' => 'success',
                         'pending' => 'warning',
                         'denied' => 'danger',
@@ -88,7 +87,7 @@ class BookingsTable
                             }),
                             'denied' => $query->whereHas('approvals', function ($q) use ($flow) {
                                 $q->where('key', $flow->name)
-                                  ->whereIn('status', ['denied', 'rejected']);
+                                    ->whereIn('status', ['denied', 'rejected']);
                             }),
                             'open' => $query->whereDoesntHave('approvals', function ($q) use ($flow) {
                                 $q->where('key', $flow->name);
@@ -100,15 +99,14 @@ class BookingsTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make()
-                    ->visible(fn(Booking $record): bool =>
-                        ! auth()->user()->hasRole('Head')),
+                    ->visible(fn (Booking $record): bool => ! auth()->user()->hasRole('Head')),
                 static::getApproveAction(),
                 static::getRejectAction(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->visible(fn() => auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')),
+                        ->visible(fn () => auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')),
                 ]),
             ]);
     }
@@ -122,6 +120,14 @@ class BookingsTable
         // Super Admin: sees all bookings
         if ($user->hasRole('Super Admin')) {
             return $query;
+        }
+
+        // Head/Admin: sees bookings from their own division
+        if ($user->hasRole('Head') || $user->hasRole('Admin')) {
+            $divisionUserIds = User::where('division_id', $user->division_id)
+                ->pluck('id');
+
+            return $query->whereIn('booker_id', $divisionUserIds);
         }
 
         // If the user has a role that matches an approval flow step,
@@ -142,16 +148,54 @@ class BookingsTable
             }
         }
 
-        // Head: sees division-scoped bookings for approval
-        if ($user->hasRole('Head')) {
-            $divisionUserIds = User::where('division_id', $user->division_id)
-                ->pluck('id');
+        // Everyone else: only sees their own bookings
+        return $query->where('booker_id', $user->id);
+    }
 
-            return $query->whereIn('booker_id', $divisionUserIds);
+    /**
+     * Sort bookings so in-flight (pending) approvals surface first, then
+     * newest first. Mirrors ApprovalEvaluator::evaluate(): pending = the
+     * flow has started (an approval record exists), nothing has been
+     * rejected/denied, and at least one step is not yet approved.
+     */
+    protected static function applyPendingFirstSort(Builder $query): Builder
+    {
+        $flow = ApprovalFlow::where('model_type', Booking::class)->first();
+
+        if (! $flow) {
+            return $query->orderBy('bookings.created_at', 'desc');
         }
 
-        // Everyone else (Admin, etc.): only sees their own bookings
-        return $query->where('booker_id', $user->id);
+        return $query->orderByRaw('CASE WHEN (
+                EXISTS (
+                    SELECT 1 FROM approvals a
+                    WHERE a.approvable_type = ?
+                      AND a.approvable_id = bookings.id
+                      AND a.key = ?
+                      AND a.deleted_at IS NULL
+                )
+                AND NOT EXISTS (
+                    SELECT 1 FROM approvals a2
+                    WHERE a2.approvable_type = ?
+                      AND a2.approvable_id = bookings.id
+                      AND a2.status IN (?, ?)
+                      AND a2.deleted_at IS NULL
+                )
+                AND EXISTS (
+                    SELECT 1 FROM approval_flow_steps s
+                    WHERE s.approval_flow_id = ?
+                      AND NOT EXISTS (
+                          SELECT 1 FROM approvals a3
+                          WHERE a3.approvable_type = ?
+                            AND a3.approvable_id = bookings.id
+                            AND a3.approval_flow_step_id = s.id
+                            AND a3.status = ?
+                            AND a3.deleted_at IS NULL
+                      )
+                )
+            ) THEN 0 ELSE 1 END ASC, bookings.created_at DESC',
+            [Booking::class, $flow->name, Booking::class, 'rejected', 'denied', $flow->id, Booking::class, 'approved']
+        );
     }
 
     public static function canApproveStep(Booking $record): bool
@@ -185,40 +229,40 @@ class BookingsTable
         };
     }
 
-    public static function getApproveAction(): \Filament\Actions\Action
+    public static function getApproveAction(): Action
     {
-        return \Filament\Actions\Action::make('approve')
+        return Action::make('approve')
             ->label('Approve')
             ->icon('heroicon-o-check-circle')
             ->color('success')
             ->visible(fn (Booking $record): bool => static::canApproveStep($record))
             ->requiresConfirmation()
             ->action(function (Booking $record) {
-                app(\App\Services\BookingApprovalService::class)->approve($record);
+                app(BookingApprovalService::class)->approve($record);
             });
     }
 
-    public static function getRejectAction(): \Filament\Actions\Action
+    public static function getRejectAction(): Action
     {
-        return \Filament\Actions\Action::make('reject')
+        return Action::make('reject')
             ->label('Reject')
             ->icon('heroicon-o-x-circle')
             ->color('danger')
             ->visible(fn (Booking $record): bool => static::canApproveStep($record))
             ->requiresConfirmation()
             ->form([
-                \Filament\Forms\Components\Textarea::make('reason')
+                Textarea::make('reason')
                     ->label('Reason for rejection')
                     ->required(),
             ])
             ->action(function (Booking $record, array $data) {
-                app(\App\Services\BookingApprovalService::class)->reject($record, $data['reason'] ?? null);
+                app(BookingApprovalService::class)->reject($record, $data['reason'] ?? null);
             });
     }
 
     public static function processApproval(Booking $record, string $status, ?string $reason = null): void
     {
-        $service = app(\App\Services\BookingApprovalService::class);
+        $service = app(BookingApprovalService::class);
 
         if ($status === 'approved') {
             $service->approve($record, $reason);
