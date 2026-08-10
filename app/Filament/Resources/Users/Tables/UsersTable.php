@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
@@ -30,7 +31,7 @@ class UsersTable
                     ->label(__('Employee Number'))
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('division.name')
+                TextColumn::make('division.initial')
                     ->label(__('Division'))
                     ->searchable()
                     ->sortable(),
@@ -45,7 +46,11 @@ class UsersTable
                     ->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('division_id')
+                    ->label('Division')
+                    ->relationship('division', 'initial')
+                    ->searchable()
+                    ->preload(),
             ])
             ->recordActions([
                 EditAction::make()
