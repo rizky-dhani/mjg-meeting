@@ -75,7 +75,7 @@ class Approvals extends Page implements HasTable
         $userRoleNames = $user->getRoleNames();
 
         $matchingSteps = $flow->steps()
-            ->with('role')
+            ->with('role', 'divisions')
             ->whereHas('role', fn ($q) => $q->whereIn('name', $userRoleNames))
             ->get();
 
@@ -111,7 +111,7 @@ class Approvals extends Page implements HasTable
                 $q->orWhere(function ($sq) use ($flow, $step, $user) {
                     // Scope check: skip steps the user cannot act on
                     if ($step->scope === ApprovalFlowStep::SCOPE_DEPARTMENT) {
-                        if ($step->division_id && $user->division_id !== $step->division_id) {
+                        if ($step->divisions->isNotEmpty() && ! $step->divisions->contains('id', $user->division_id)) {
                             $sq->whereRaw('0 = 1');
 
                             return;

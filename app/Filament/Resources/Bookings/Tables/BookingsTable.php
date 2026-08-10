@@ -218,8 +218,8 @@ class BookingsTable
         }
 
         return match ($step->scope) {
-            // Specific division: user must belong to that division
-            'department' => $step->division !== null && $user->division_id === $step->division->id,
+            // Specific divisions: user must belong to one of them
+            'department' => $step->divisions->isNotEmpty() && $step->divisions->contains('id', $user->division_id),
 
             // Same as requester: user must be in the requester's division
             'requester' => $user->division_id === $record->user->division_id,

@@ -182,8 +182,8 @@ class ViewBooking extends ViewRecord
 
         $query = User::role($roleName);
 
-        if ($step->scope === 'department' && $step->division_id !== null) {
-            $query->where('division_id', $step->division_id);
+        if ($step->scope === 'department' && $step->divisions->isNotEmpty()) {
+            $query->whereIn('division_id', $step->divisions->pluck('id'));
         }
 
         if ($step->scope === 'requester') {
