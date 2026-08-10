@@ -62,7 +62,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function designation(): BelongsTo
     {
-        return $this->belongsTo(Designation::class);
+        return $this->belongsTo(Designation::class, 'designation_id', 'designation_id');
     }
 
     public function bookings(): HasMany
