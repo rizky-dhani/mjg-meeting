@@ -48,9 +48,9 @@ class AttendanceResource extends Resource
             return $query;
         }
 
-        // Head/Admin: attendances for bookings from their own division
+        // Head/Admin: attendances for bookings from their own divisions
         if ($user->hasRole('Head') || $user->hasRole('Admin')) {
-            return $query->whereHas('booking.booker', fn ($q) => $q->where('division_id', $user->division_id));
+            return $query->whereHas('booking.booker', fn ($q) => $q->whereIn('division_id', $user->divisionIds()));
         }
 
         // Everyone else: only their own attendance records

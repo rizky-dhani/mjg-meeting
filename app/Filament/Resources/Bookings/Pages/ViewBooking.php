@@ -187,11 +187,13 @@ class ViewBooking extends ViewRecord
         }
 
         if ($step->scope === 'requester') {
-            $requesterDivId = $record->user?->division_id;
-            if ($requesterDivId === null) {
+            $requesterDivIds = $record->user?->divisionIds() ?? [];
+
+            if ($requesterDivIds === []) {
                 return 'No eligible approver';
             }
-            $query->where('division_id', $requesterDivId);
+
+            $query->whereIn('division_id', $requesterDivIds);
         }
 
         $user = $query->first();

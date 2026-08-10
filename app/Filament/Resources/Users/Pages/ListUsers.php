@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Exports\UserExport;
+use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
 use App\Imports\UserImport;
 use Filament\Actions\Action;
@@ -49,7 +50,8 @@ class ListUsers extends ListRecords
                     Excel::import(new UserImport, $file->getRealPath());
                 }),
             CreateAction::make()
-                ->modal(),
+                ->modal()
+                ->mutateFormDataUsing(fn (array $data): array => UserForm::splitSubmittedDivisions($data)),
         ];
     }
 }

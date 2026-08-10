@@ -124,7 +124,7 @@ class BookingsTable
 
         // Head/Admin: sees bookings from their own division
         if ($user->hasRole('Head') || $user->hasRole('Admin')) {
-            $divisionUserIds = User::where('division_id', $user->division_id)
+            $divisionUserIds = User::whereIn('division_id', $user->divisionIds())
                 ->pluck('id');
 
             return $query->whereIn('booker_id', $divisionUserIds);
@@ -219,10 +219,10 @@ class BookingsTable
 
         return match ($step->scope) {
             // Specific divisions: user must belong to one of them
-            'department' => $step->divisions->isNotEmpty() && $step->divisions->contains('id', $user->division_id),
+            'department' => $step->divisions->isNotEmpty() && $step->divisions->pluck('id')->intersect($user->divisionIds())->isNotEmpty(),
 
-            // Same as requester: user must be in the requester's division
-            'requester' => $user->division_id === $record->user->division_id,
+            // Same as requester: user must be in one of the requester's divisions
+            'requester' => in_array($record->user->division_id, $user->divisionIds(), true),
 
             // All divisions: no additional check needed
             default => true,

@@ -87,7 +87,7 @@ class ApprovalEvaluator
         return match ($step->scope) {
             'department' => $query->whereIn('division_id', $step->divisions->pluck('id'))->get(),
             'requester' => $booking->user !== null
-                ? $query->where('division_id', $booking->user->division_id)->get()
+                ? $query->whereIn('division_id', $booking->user->divisionIds())->get()
                 : collect(),
             default => $query->get(),
         };
@@ -113,11 +113,17 @@ class ApprovalEvaluator
 
         $requester = $model->user;
 
-        if ($requester === null || $requester->division_id === null) {
+        if ($requester === null) {
             return true;
         }
 
-        return ! User::where('division_id', $requester->division_id)
+        $requesterDivIds = $requester->divisionIds();
+
+        if ($requesterDivIds === []) {
+            return true;
+        }
+
+        return ! User::whereIn('division_id', $requesterDivIds)
             ->role($step->role->name)
             ->exists();
     }

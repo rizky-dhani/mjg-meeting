@@ -66,10 +66,11 @@ class Approvals extends Page implements HasTable
         }
 
         $isDivisionScoped = $user->hasRole('Head') || $user->hasRole('Admin');
+        $userDivisionIds = $user->divisionIds();
 
-        // Head/Admin: only approvals for bookings from their own division
-        if ($isDivisionScoped && $user->division_id !== null) {
-            $query->whereHas('booker', fn ($uq) => $uq->where('division_id', $user->division_id));
+        // Head/Admin: only approvals for bookings from their own divisions
+        if ($isDivisionScoped && $userDivisionIds !== []) {
+            $query->whereHas('booker', fn ($uq) => $uq->whereIn('division_id', $userDivisionIds));
         }
 
         $userRoleNames = $user->getRoleNames();
@@ -111,17 +112,19 @@ class Approvals extends Page implements HasTable
                 $q->orWhere(function ($sq) use ($flow, $step, $user) {
                     // Scope check: skip steps the user cannot act on
                     if ($step->scope === ApprovalFlowStep::SCOPE_DEPARTMENT) {
-                        if ($step->divisions->isNotEmpty() && ! $step->divisions->contains('id', $user->division_id)) {
+                        if ($step->divisions->isNotEmpty() && $step->divisions->pluck('id')->intersect($user->divisionIds())->isEmpty()) {
                             $sq->whereRaw('0 = 1');
 
                             return;
                         }
                     }
 
-                    // Requester scope: restrict to the user's division
+                    // Requester scope: restrict to the user's divisions
                     if ($step->scope === ApprovalFlowStep::SCOPE_REQUESTER) {
-                        if ($user->division_id) {
-                            $sq->whereHas('user', fn ($uq) => $uq->where('division_id', $user->division_id));
+                        $ids = $user->divisionIds();
+
+                        if ($ids !== []) {
+                            $sq->whereHas('user', fn ($uq) => $uq->whereIn('division_id', $ids));
                         }
                     }
 
