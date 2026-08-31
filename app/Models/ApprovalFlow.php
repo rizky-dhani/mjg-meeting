@@ -28,8 +28,7 @@ class ApprovalFlow extends Model
     public function getDivisionsAttribute(): Collection
     {
         return $this->steps
-            ->filter(fn (ApprovalFlowStep $step) => $step->division !== null)
-            ->pluck('division')
+            ->flatMap(fn (ApprovalFlowStep $step) => $step->divisions)
             ->unique('id')
             ->values();
     }

@@ -6,8 +6,10 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -60,9 +62,45 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Division::class);
     }
 
+    /**
+     * Additional divisions beyond the primary division_id.
+     */
+    public function divisions(): BelongsToMany
+    {
+        return $this->belongsToMany(Division::class);
+    }
+
+    /**
+     * All divisions this user belongs to: primary division_id plus extras.
+     *
+     * @return array<int, int>
+     */
+    public function divisionIds(): array
+    {
+        return collect([$this->division_id])
+            ->merge($this->divisions()->pluck('divisions.id'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /** @return Collection<int, Division> */
+    public function allDivisions(): Collection
+    {
+        $primary = $this->division;
+        $extras = $this->divisions;
+
+        return collect([$primary])
+            ->merge($extras)
+            ->filter()
+            ->unique('id')
+            ->values();
+    }
+
     public function designation(): BelongsTo
     {
-        return $this->belongsTo(Designation::class);
+        return $this->belongsTo(Designation::class, 'designation_id', 'designation_id');
     }
 
     public function bookings(): HasMany

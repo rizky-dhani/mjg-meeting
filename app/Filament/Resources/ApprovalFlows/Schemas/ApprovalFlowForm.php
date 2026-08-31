@@ -73,12 +73,12 @@ class ApprovalFlowForm
                                     ->label('Div. Scope')
                                     ->live(),
 
-                                Select::make('division_id')
-                                    ->relationship('division', 'name', fn (Builder $query) => $query->orderBy('name'))
-                                    ->nullable()
+                                Select::make('divisions')
+                                    ->relationship('divisions', 'name', fn (Builder $query) => $query->orderBy('name'))
+                                    ->multiple()
                                     ->searchable()
                                     ->preload()
-                                    ->label('Division')
+                                    ->label('Divisions')
                                     ->hidden(fn (Get $get) => $get('scope') !== 'department')
                                     ->createOptionForm([
                                         TextInput::make('name')

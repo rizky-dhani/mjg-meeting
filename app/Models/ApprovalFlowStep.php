@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ApprovalFlowStep extends Model
 {
@@ -20,7 +21,6 @@ class ApprovalFlowStep extends Model
     protected $fillable = [
         'approval_flow_id',
         'role_id',
-        'division_id',
         'step_order',
         'scope',
     ];
@@ -35,8 +35,8 @@ class ApprovalFlowStep extends Model
         return $this->belongsTo(Role::class);
     }
 
-    public function division(): BelongsTo
+    public function divisions(): BelongsToMany
     {
-        return $this->belongsTo(Division::class);
+        return $this->belongsToMany(Division::class);
     }
 }

@@ -17,7 +17,8 @@ class DivisionsTable
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->copyable(),
                 TextColumn::make('initial')
                     ->searchable()
                     ->badge(),

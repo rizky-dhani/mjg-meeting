@@ -30,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
                 if (in_array($ability, [
                     'view_any_booking',
                     'view_booking',
+                    'view_approvals',
                 ])) {
                     return true;
                 }
@@ -38,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
                     'create_booking',
                     'update_booking',
                     'delete_booking',
+                    'view_any_attendance',
+                    'view_attendance',
                 ])) {
                     return false;
                 }
@@ -52,6 +55,9 @@ class AppServiceProvider extends ServiceProvider
                     'create_booking',
                     'update_booking',
                     'delete_booking',
+                    'view_any_attendance',
+                    'view_attendance',
+                    'view_approvals',
                 ])) {
                     return true;
                 }

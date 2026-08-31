@@ -20,11 +20,13 @@ class BookingsList extends BaseWidget
     {
         $user = auth()->user();
 
-        if (! $user->division_id) {
+        $userDivisionIds = $user->divisionIds();
+
+        if ($userDivisionIds === []) {
             return Booking::whereRaw('0 = 1');
         }
 
-        $divisionUserIds = User::where('division_id', $user->division_id)
+        $divisionUserIds = User::whereIn('division_id', $userDivisionIds)
             ->pluck('id');
 
         return Booking::whereIn('user_id', $divisionUserIds)

@@ -28,10 +28,10 @@
                 <div class="text-green-500 text-5xl mb-4">&#10003;</div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Already Checked In</h2>
                 <p class="text-gray-500">
-                    @if ($isGuest)
+                    @if ($showGuestForm)
                         <strong>{{ $guestName }}</strong> has already recorded attendance for this meeting.
                     @else
-                        You've already recorded your attendance for this meeting.
+                        This user has already recorded attendance for this meeting.
                     @endif
                 </p>
                 <div class="mt-6 bg-gray-50 rounded-lg p-4 text-left">
@@ -46,10 +46,10 @@
                 <div class="text-green-500 text-5xl mb-4">&#10003;</div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Attendance Recorded!</h2>
                 <p class="text-gray-500">
-                    @if ($isGuest)
+                    @if ($showGuestForm)
                         Check-in for <strong>{{ $guestName }}</strong> has been recorded successfully.
                     @else
-                        Your check-in has been recorded successfully.
+                        Check-in has been recorded successfully.
                     @endif
                 </p>
                 <div class="mt-6 bg-gray-50 rounded-lg p-4 text-left">
@@ -85,7 +85,7 @@
 
                 <div class="text-center">
                     <p class="text-sm text-gray-500 mb-4">
-                        Checking in as <strong>{{ auth()->user()->name }}</strong>
+                        Checking in as <strong>{{ $showGuestForm ? $guestName : $this->getSelectedUserName() }}</strong>
                     </p>
                     <div class="flex gap-3">
                         <button
@@ -104,78 +104,8 @@
                 </div>
             </div>
 
-        @elseif ($isGuest)
-            {{-- Guest check-in form --}}
-            <div class="bg-white shadow rounded-lg p-8">
-                <div class="text-center mb-6">
-                    <div class="text-indigo-500 text-5xl mb-4">&#128197;</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Guest Check-In</h2>
-                </div>
-
-                <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h3 class="font-semibold text-lg text-gray-900">{{ $booking->title }}</h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        {{ $booking->room->name }}
-                        @if($booking->room->location)
-                            &middot; {{ $booking->room->location->name }}
-                        @endif
-                    </p>
-                    <p class="text-sm text-gray-500 mt-1">
-                        {{ $booking->starts_at->format('l, M d, Y') }}
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        {{ $booking->starts_at->format('H:i') }} &ndash; {{ $booking->ends_at->format('H:i') }}
-                    </p>
-                </div>
-
-                <form wire:submit="checkIn" class="space-y-4">
-                    <p class="text-sm text-gray-600">Enter your details to check in as a guest:</p>
-
-                    <div>
-                        <label for="guestName" class="block text-sm font-medium text-gray-700">Name <span class="text-red-500">*</span></label>
-                        <input
-                            wire:model="guestName"
-                            id="guestName"
-                            type="text"
-                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="Your full name"
-                        >
-                        @error('guestName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label for="guestFrom" class="block text-sm font-medium text-gray-700">From</label>
-                        <input
-                            wire:model="guestFrom"
-                            id="guestFrom"
-                            type="text"
-                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="e.g., Acme Corp"
-                        >
-                    </div>
-
-                    <div>
-                        <label for="guestDesignation" class="block text-sm font-medium text-gray-700">Designation</label>
-                        <input
-                            wire:model="guestDesignation"
-                            id="guestDesignation"
-                            type="text"
-                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="e.g., Vendor PIC"
-                        >
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-                    >
-                        Check In as Guest
-                    </button>
-                </form>
-            </div>
-
         @else
-            {{-- Authenticated user check-in --}}
+            {{-- Check-in form --}}
             <div class="bg-white shadow rounded-lg p-8">
                 <div class="text-center mb-6">
                     <div class="text-indigo-500 text-5xl mb-4">&#128197;</div>
@@ -201,17 +131,123 @@
                     @endif
                 </div>
 
-                <div class="text-center">
-                    <p class="text-sm text-gray-500 mb-4">
-                        You're checking in as <strong>{{ auth()->user()->name }}</strong>
-                    </p>
-                    <button
-                        wire:click="confirmCheckIn"
-                        class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-                    >
-                        Mark Attendance
-                    </button>
-                </div>
+                @if ($showGuestForm)
+                    {{-- Guest check-in form --}}
+                    <form wire:submit="checkIn" class="space-y-4">
+                        <p class="text-sm text-gray-600">Enter your details to check in as a guest:</p>
+
+                        <div>
+                            <label for="guestName" class="block text-sm font-medium text-gray-700">Name <span class="text-red-500">*</span></label>
+                            <input
+                                wire:model="guestName"
+                                id="guestName"
+                                type="text"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Your full name"
+                            >
+                            @error('guestName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label for="guestFrom" class="block text-sm font-medium text-gray-700">From</label>
+                            <input
+                                wire:model="guestFrom"
+                                id="guestFrom"
+                                type="text"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="e.g., Acme Corp"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="guestDesignation" class="block text-sm font-medium text-gray-700">Designation</label>
+                            <input
+                                wire:model="guestDesignation"
+                                id="guestDesignation"
+                                type="text"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="e.g., Vendor PIC"
+                            >
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                        >
+                            Check In as Guest
+                        </button>
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <button
+                            wire:click="toggleGuestForm"
+                            class="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+                        >
+                            &larr; Back to staff check-in
+                        </button>
+                    </div>
+                @else
+                    {{-- Staff check-in: user search --}}
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Search your name</label>
+                            <input
+                                wire:model.live.debounce.300ms="userSearch"
+                                type="text"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Type name, email, or employee code..."
+                            >
+                        </div>
+
+                        @if (count($searchResults) > 0)
+                            <div class="border border-gray-200 rounded-lg divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                                @foreach ($searchResults as $result)
+                                    <button
+                                        type="button"
+                                        wire:click="selectUser({{ $result['id'] }})"
+                                        class="w-full text-left px-4 py-3 hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none transition-colors {{ $selectedUserId == $result['id'] ? 'bg-indigo-50 border-l-4 border-indigo-600' : '' }}"
+                                    >
+                                        <div class="font-medium text-gray-900">{{ $result['name'] }}</div>
+                                        <div class="text-sm text-gray-500">{{ $result['email'] }}</div>
+                                    </button>
+                                @endforeach
+                            </div>
+                        @elseif (strlen($userSearch) >= 2)
+                            <p class="text-sm text-gray-500 text-center py-4">No users found matching "{{ $userSearch }}"</p>
+                        @endif
+
+                        @if ($selectedUserId)
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <div class="text-green-500 text-xl mr-3">&#10003;</div>
+                                    <div>
+                                        <p class="font-medium text-green-800">Selected: {{ $this->getSelectedUserName() }}</p>
+                                        <p class="text-sm text-green-600">Click below to confirm your attendance.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @error('selectedUserId') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <button
+                            wire:click="confirmCheckIn"
+                            @disabled(! $selectedUserId)
+                            class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Mark Attendance
+                        </button>
+
+                        <div class="text-center">
+                            <button
+                                wire:click="toggleGuestForm"
+                                class="text-sm text-gray-500 hover:text-gray-700 font-medium"
+                            >
+                                Not a staff member? Check in as guest &rarr;
+                            </button>
+                        </div>
+                    </div>
+                @endif
             </div>
         @endif
     </div>

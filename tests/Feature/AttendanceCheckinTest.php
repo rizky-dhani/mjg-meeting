@@ -11,8 +11,6 @@ use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
-use function Pest\Laravel\actingAs;
-
 beforeEach(function () {
     Role::create(['name' => 'User']);
     Role::create(['name' => 'Admin']);
@@ -75,18 +73,15 @@ beforeEach(function () {
 });
 
 it('shows meeting details for a valid QR token', function () {
-    actingAs($this->user);
-
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
         ->assertSet('booking.id', $this->booking->id)
         ->assertSee($this->booking->title)
         ->assertSee($this->booking->room->name);
 });
 
-it('allows user to check in', function () {
-    actingAs($this->user);
-
+it('allows user to check in by selecting themselves', function () {
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->set('selectedUserId', $this->user->id)
         ->call('confirmCheckIn')
         ->assertSet('confirming', true)
         ->call('checkIn')
@@ -99,9 +94,7 @@ it('allows user to check in', function () {
     )->toBeTrue();
 });
 
-it('prevents duplicate check-in', function () {
-    actingAs($this->user);
-
+it('prevents duplicate check-in for selected user', function () {
     Attendance::create([
         'booking_id' => $this->booking->id,
         'user_id' => $this->user->id,
@@ -109,6 +102,7 @@ it('prevents duplicate check-in', function () {
     ]);
 
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->set('selectedUserId', $this->user->id)
         ->assertSet('alreadyCheckedIn', true)
         ->assertSee('Already Checked In');
 });
@@ -147,35 +141,39 @@ it('shows expired for past meeting', function () {
         'approval_flow_step_id' => $this->adminStep->id,
     ]);
 
-    actingAs($this->user);
-
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $pastBooking->qr_token])
         ->assertSet('isExpired', true)
         ->assertSee('QR Code Expired');
 });
 
 it('shows invalid for non-existent token', function () {
-    actingAs($this->user);
-
     Livewire::test(AttendanceCheckin::class, ['qrToken' => 'non-existent-token'])
         ->assertSet('booking', null)
         ->assertSee('Invalid QR Code');
 });
 
-it('loads page for unauthenticated guest users', function () {
+it('loads page without authentication', function () {
     $this->get(route('attendance.checkin', ['qrToken' => $this->booking->qr_token]))
         ->assertOk();
 });
 
-it('allows unauthenticated guest to check in via QR', function () {
+it('searches users by name', function () {
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
-        ->assertSet('isGuest', true)
-        ->assertSee('Guest Check-In')
+        ->set('userSearch', $this->user->name)
+        ->assertSet('searchResults.0.id', $this->user->id)
+        ->assertSet('searchResults.0.name', $this->user->name);
+});
+
+it('allows guest check in via toggle', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->assertSee('Not a staff member')
+        ->call('toggleGuestForm')
+        ->assertSee('Check In as Guest')
         ->set('guestName', 'John External')
         ->set('guestFrom', 'Acme Corp')
         ->set('guestDesignation', 'Vendor PIC')
         ->call('checkIn')
-        ->assertSet('checkedIn', true);
+        ->assertSee('Attendance Recorded!');
 
     $attendance = Attendance::where('booking_id', $this->booking->id)
         ->whereNull('user_id')
@@ -198,8 +196,8 @@ it('prevents duplicate guest check-in with same name', function () {
     ]);
 
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
-        ->assertSet('isGuest', true)
-        ->assertSee('Guest Check-In')
+        ->call('toggleGuestForm')
+        ->assertSet('showGuestForm', true)
         ->set('guestName', 'John External')
         ->set('guestFrom', 'Acme Corp')
         ->set('guestDesignation', 'Vendor PIC')
@@ -208,16 +206,18 @@ it('prevents duplicate guest check-in with same name', function () {
         ->assertSee('Already Checked In');
 });
 
-it('requires guest name when checking in', function () {
+it('requires guest name when checking in as guest', function () {
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
-        ->assertSet('isGuest', true)
+        ->call('toggleGuestForm')
+        ->assertSet('showGuestForm', true)
         ->call('checkIn')
         ->assertHasErrors('guestName');
 });
 
-it('allows guest check-in with only name (from and designation optional)', function () {
+it('allows guest check-in with only name', function () {
     Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
-        ->assertSet('isGuest', true)
+        ->call('toggleGuestForm')
+        ->assertSet('showGuestForm', true)
         ->set('guestName', 'Minimal Guest')
         ->call('checkIn')
         ->assertSet('checkedIn', true);
@@ -226,4 +226,38 @@ it('allows guest check-in with only name (from and designation optional)', funct
         ->where('guest_name', 'Minimal Guest')
         ->exists()
     )->toBeTrue();
+});
+
+it('requires user selection for staff check-in', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->call('confirmCheckIn')
+        ->assertSet('confirming', true)
+        ->call('checkIn')
+        ->assertHasErrors('selectedUserId');
+});
+
+it('validates selected user exists', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->set('selectedUserId', 99999)
+        ->call('confirmCheckIn')
+        ->assertSet('confirming', true)
+        ->call('checkIn')
+        ->assertHasErrors('selectedUserId');
+});
+
+it('clears selected user when toggling to guest form', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->set('selectedUserId', $this->user->id)
+        ->call('toggleGuestForm')
+        ->assertSet('showGuestForm', true)
+        ->assertSet('selectedUserId', null);
+});
+
+it('clears guest form when selecting a user', function () {
+    Livewire::test(AttendanceCheckin::class, ['qrToken' => $this->booking->qr_token])
+        ->call('toggleGuestForm')
+        ->assertSet('showGuestForm', true)
+        ->call('selectUser', $this->user->id)
+        ->assertSet('showGuestForm', false)
+        ->assertSet('selectedUserId', $this->user->id);
 });

@@ -85,9 +85,9 @@ class ApprovalEvaluator
         $query = User::role($step->role->name);
 
         return match ($step->scope) {
-            'department' => $query->where('division_id', $step->division_id)->get(),
+            'department' => $query->whereIn('division_id', $step->divisions->pluck('id'))->get(),
             'requester' => $booking->user !== null
-                ? $query->where('division_id', $booking->user->division_id)->get()
+                ? $query->whereIn('division_id', $booking->user->divisionIds())->get()
                 : collect(),
             default => $query->get(),
         };
@@ -97,7 +97,7 @@ class ApprovalEvaluator
      */
     public static function findFlow(Model $model): ?ApprovalFlow
     {
-        return ApprovalFlow::where('model_type', $model::class)->with('steps.role', 'steps.division')->first();
+        return ApprovalFlow::where('model_type', $model::class)->with('steps.role', 'steps.divisions')->first();
     }
 
     /**
@@ -113,11 +113,17 @@ class ApprovalEvaluator
 
         $requester = $model->user;
 
-        if ($requester === null || $requester->division_id === null) {
+        if ($requester === null) {
             return true;
         }
 
-        return ! User::where('division_id', $requester->division_id)
+        $requesterDivIds = $requester->divisionIds();
+
+        if ($requesterDivIds === []) {
+            return true;
+        }
+
+        return ! User::whereIn('division_id', $requesterDivIds)
             ->role($step->role->name)
             ->exists();
     }
